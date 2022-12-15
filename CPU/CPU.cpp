@@ -2,8 +2,8 @@
 
 #include <gtest/gtest.h>
 
-#include "CPUSingle.h"
 #include "MbedTest.h"
+#include "DESv1.h"
 
 void TestDES()
 {
@@ -55,6 +55,55 @@ void TestDES()
 	}
 }
 
+void TestAES()
+{
+	const std::string key = BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101");
+	const std::string input(64, 'A');
+
+	std::string expected;
+
+	{
+		mbed::AES aes(key);
+
+		std::string ciphertext = aes.Encrypt(input);
+		std::string plaintext = aes.Decrypt(ciphertext);
+
+		expected = ciphertext;
+
+		EXPECT_STREQ(input.c_str(), plaintext.c_str());
+	}
+
+	{
+		mbed::AESParallel aes(key, 16);
+
+		std::string ciphertext = aes.Encrypt(input);
+		std::string plaintext = aes.Decrypt(ciphertext);
+
+		EXPECT_STREQ(input.c_str(), plaintext.c_str());
+		EXPECT_STREQ(ciphertext.c_str(), expected.c_str());
+	}
+
+	{
+		mbed::AESParallel aes(key, 32);
+
+		std::string ciphertext = aes.Encrypt(input);
+		std::string plaintext = aes.Decrypt(ciphertext);
+
+		EXPECT_STREQ(input.c_str(), plaintext.c_str());
+		EXPECT_STREQ(ciphertext.c_str(), expected.c_str());
+	}
+
+	{
+		mbed::AESParallel aes(key, 64);
+
+		std::string ciphertext = aes.Encrypt(input);
+		std::string plaintext = aes.Decrypt(ciphertext);
+
+		EXPECT_STREQ(input.c_str(), plaintext.c_str());
+		EXPECT_STREQ(ciphertext.c_str(), expected.c_str());
+	}
+}
+
 void TimeEncrypt(const EncryptBase& des, const std::string& in, std::string out)
 {
 	out = des.Encrypt(in);
@@ -63,9 +112,12 @@ void TimeEncrypt(const EncryptBase& des, const std::string& in, std::string out)
 
 int main()
 {
-	mbed::DES::Test();
+	//EXPECT_EQ(mbed::DES::Test(), 0);
+	//EXPECT_EQ(mbed::AES::Test(), 0);
 
 	TestDES();
+
+	TestAES();
 
 	{
 		mbed::DES des(BinToStr("1010101010111011000010010001100000100111001101101100110011011101"));

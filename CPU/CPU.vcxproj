@@ -165,11 +165,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CPU.cpp" />
-    <ClCompile Include="CPUSingle.cpp" />
+    <ClCompile Include="DESv1.cpp" />
     <ClCompile Include="MbedTest.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CPUSingle.h" />
+    <ClInclude Include="DESv1.h" />
     <ClInclude Include="Base.h" />
     <ClInclude Include="MbedTest.h" />
   </ItemGroup>

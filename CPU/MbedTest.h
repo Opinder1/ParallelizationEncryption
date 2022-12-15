@@ -67,6 +67,7 @@ namespace mbed
 
 	class AES : public EncryptBase
 	{
+	public:
 		AES(const std::string& key);
 
 		~AES();
@@ -78,17 +79,19 @@ namespace mbed
 		std::string Decrypt(const std::string& input) const override;
 
 	protected:
-		mbedtls_aes_context m_enc_ctx;
-		mbedtls_aes_context m_dec_ctx;
+		mbedtls_aes_context m_ctx;
 	};
 
 	class AESParallel : public AES
 	{
 	public:
-		AESParallel(const std::string& key);
+		AESParallel(const std::string& key, size_t group_size);
 
 		std::string Encrypt(const std::string& input) const override;
 
 		std::string Decrypt(const std::string& input) const override;
+
+	private:
+		size_t m_group_size;
 	};
 }

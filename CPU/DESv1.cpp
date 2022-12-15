@@ -1,4 +1,4 @@
-#include "CPUSingle.h"
+#include "DESv1.h"
 
 #include "../Shared/Shared.h"
 
@@ -164,15 +164,20 @@ namespace des::v1
 
 		for (size_t i = 0; i < 16; i++)
 		{
-			if (i < 2 || i == 8 || i == 15)
+			switch (i)
 			{
+			case 0:
+			case 1:
+			case 8:
+			case 15:
 				RotateLeft1Bit(both, 0, 28);
 				RotateLeft1Bit(both, 28, 28);
-			}
-			else
-			{
+				break;
+
+			default:
 				RotateLeft2Bits(both, 0, 28);
 				RotateLeft2Bits(both, 28, 28);
+				break;
 			}
 
 			m_enc_keys[i].bytes = Append(Permute<24>(both, left_round_perm), Permute<24>(both, right_round_perm));

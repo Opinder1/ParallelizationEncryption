@@ -21,12 +21,12 @@
     <ClCompile Include="MbedTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CPUSingle.cpp">
+    <ClCompile Include="DESv1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CPUSingle.h">
+    <ClInclude Include="DESv1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MbedTest.h">
