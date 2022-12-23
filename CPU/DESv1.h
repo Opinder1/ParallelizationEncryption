@@ -10,6 +10,11 @@ namespace des::v1
 	class DES : public EncryptBase
 	{
 	public:
+		static constexpr size_t k_block_size = 8;
+		static constexpr size_t k_min_key_size = 8;
+
+		struct Exception {};
+
 		struct RoundKey
 		{
 			std::bitset<48> bytes;
@@ -38,7 +43,7 @@ namespace des::v1
 	class DESParallel : public DES
 	{
 	public:
-		DESParallel(const std::string& key);
+		DESParallel(const std::string& key, size_t group_size = 1);
 
 		std::string Encrypt(const std::string& input) const override;
 

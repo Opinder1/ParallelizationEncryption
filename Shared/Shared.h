@@ -4,40 +4,77 @@
 #include <chrono>
 #include <bitset>
 
-struct Array
+inline char ToLower(char input)
 {
-	const char* data;
-	size_t size;
-};
+	if (input >= 'A' && input <= 'Z')
+	{
+		return input + ('a' - 'A');
+	}
+	else
+	{
+		return input;
+	}
+}
+
+inline std::string BinToStr(std::string_view input)
+{
+	std::string output((input.size() + 7) / 8, 0);
+
+	for (size_t i = 0; i < input.size(); i++)
+	{
+		if (input[i] == '1')
+		{
+			output[i / 8] += 1 << (i % 8);
+		}
+	}
+
+	return output;
+}
+
+inline std::string StrToBin(std::string_view input, size_t bit_count = 0)
+{
+	size_t bits = bit_count ? bit_count : (input.size() * 8);
+
+	std::string output(bits, 0);
+
+	for (size_t i = 0; i < bits; i++)
+	{
+		const unsigned char* d = (const unsigned char*)input.data() + (i / 8);
+
+		output[i] = '0' + ((*d >> (i % 8)) & 0x01);
+	}
+
+	return output;
+}
 
 inline std::string StrToHex(std::string_view input)
 {
-	const std::string strs = "0123456789ABCDEF";
+	const std::string strs = "0123456789abcdef";
 
-	std::string out;
+	std::string output;
 
 	for (size_t i = 0; i < input.size(); i++)
 	{
 		unsigned char a = (unsigned char)input[i] / 16;
 		unsigned char b = (unsigned char)input[i] % 16;
 
-		out.append(1, strs[a]);
-		out.append(1, strs[b]);
+		output.append(1, strs[a]);
+		output.append(1, strs[b]);
 	}
 
-	return out;
+	return output;
 }
 
-inline std::string HexToBin(std::string_view input)
+inline std::string HexToStr(std::string_view input)
 {
-	const std::string strs = "0123456789ABCDEF";
+	const std::string strs = "0123456789abcdef";
 
 	std::string output;
 
 	for (size_t i = 0; i < input.size(); i += 2)
 	{
-		unsigned char a = (unsigned char)strs.find_first_of(input[i]);
-		unsigned char b = (unsigned char)strs.find_first_of(input[i + 1]);
+		unsigned char a = (unsigned char)strs.find_first_of(ToLower(input[i]));
+		unsigned char b = (unsigned char)strs.find_first_of(ToLower(input[i + 1]));
 
 		unsigned char val = (a * 16) + b;
 
@@ -47,51 +84,9 @@ inline std::string HexToBin(std::string_view input)
 	return output;
 }
 
-inline std::string StrToBinNew(std::string_view input, size_t bit_count)
+inline std::string BinToHex(std::string_view input)
 {
-	std::string out;
-
-	size_t bits = bit_count ? bit_count : (input.size() * 8);
-
-	for (size_t i = 0; i < bits; i++)
-	{
-		const unsigned char* d = (const unsigned char*)input.data() + i;
-
-		out += '0' + (*d >> (i % 8) & 0x01);
-	}
-
-	return out;
-}
-
-inline std::string BinToStr(std::string_view input)
-{
-	std::string out((input.size() + 7) / 8, 0);
-
-	for (size_t i = 0; i < input.size(); i++)
-	{
-		if (input[i] == '1')
-		{
-			out[i / 8] += 1 << (i % 8);
-		}
-	}
-
-	return out;
-}
-
-inline std::string StrToBin(std::string_view input, size_t bit_count = 0)
-{
-	size_t bits = bit_count ? bit_count : (input.size() * 8);
-
-	std::string out(bits, 0);
-
-	for (size_t i = 0; i < bits; i++)
-	{
-		const unsigned char* d = (const unsigned char*)input.data() + (i / 8);
-
-		out[i] = '0' + ((*d >> (i % 8)) & 0x01);
-	}
-
-	return out;
+	return StrToHex(BinToStr(input));
 }
 
 template<size_t S>
@@ -165,7 +160,7 @@ inline void PrintUChars(const char* msg, std::string_view input)
 	printf("\n");
 }
 
-inline void PrintHex(const char* msg, std::string_view input)
+inline void PrintHexStr(const char* msg, std::string_view input)
 {
 	printf("%s: %s\n", msg, StrToHex(input).c_str());
 }
@@ -178,7 +173,7 @@ void PrintHex(const char* msg, const T* ptr)
 	printf("%s: %s\n", msg, StrToHex(input).c_str());
 }
 
-inline void PrintBin(const char* msg, std::string_view input)
+inline void PrintBinStr(const char* msg, std::string_view input)
 {
 	printf("%s: %s\n", msg, StrToBin(input, 0).c_str());
 }
@@ -207,4 +202,9 @@ inline float TimeFunc(size_t num, const F& function, Args&... args)
 	auto time_sec = time_nano.count() / 1000000000.0f;
 
 	return time_sec;
+}
+
+inline size_t CeilSize(size_t val, size_t size)
+{
+	return (((val - 1) / size) + 1) * size;
 }

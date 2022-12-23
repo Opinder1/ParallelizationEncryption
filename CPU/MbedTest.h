@@ -14,6 +14,12 @@ namespace mbed
 	class DES : public EncryptBase
 	{
 	public:
+		static constexpr size_t k_block_size = 8;
+		static constexpr size_t k_min_key_size = 8;
+
+		struct Exception {};
+
+	public:
 		DES(const std::string& key);
 
 		~DES();
@@ -32,7 +38,7 @@ namespace mbed
 	class DESParallel : public DES
 	{
 	public:
-		DESParallel(const std::string& key);
+		DESParallel(const std::string& key, size_t group_size = 1);
 
 		std::string Encrypt(const std::string& input) const override;
 
@@ -41,6 +47,12 @@ namespace mbed
 
 	class TripleDES : public EncryptBase
 	{
+	public:
+		static constexpr size_t k_block_size = 8;
+		static constexpr size_t k_min_key_size = 8 * 3;
+
+		struct Exception {};
+
 	public:
 		TripleDES(const std::string& key);
 
@@ -58,7 +70,7 @@ namespace mbed
 	class TripleDESParallel : public TripleDES
 	{
 	public:
-		TripleDESParallel(const std::string& key);
+		TripleDESParallel(const std::string& key, size_t group_size = 1);
 
 		std::string Encrypt(const std::string& input) const override;
 
@@ -67,6 +79,12 @@ namespace mbed
 
 	class AES : public EncryptBase
 	{
+	public:
+		static constexpr size_t k_block_size = 16;
+		static constexpr size_t k_min_key_size = 16;
+
+		struct Exception {};
+
 	public:
 		AES(const std::string& key);
 
@@ -85,7 +103,7 @@ namespace mbed
 	class AESParallel : public AES
 	{
 	public:
-		AESParallel(const std::string& key, size_t group_size);
+		AESParallel(const std::string& key, size_t group_size = 1);
 
 		std::string Encrypt(const std::string& input) const override;
 

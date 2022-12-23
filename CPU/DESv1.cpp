@@ -158,6 +158,11 @@ namespace des::v1
 	DES::DES(const std::string& key) :
 		EncryptBase(key)
 	{
+		if (key.size() != k_min_key_size)
+		{
+			throw Exception{};
+		}
+
 		std::bitset<64> key_bits = *(const uint64_t*)key.data();
 
 		std::bitset<56> both = Permute<56>(key_bits, key_perm);
@@ -202,12 +207,17 @@ namespace des::v1
 
 	std::string DES::Crypt(const std::string& input, const DES::RoundKey keys[16]) const
 	{
+		if (input.size() == 0 || input.size() % k_block_size != 0)
+		{
+			throw Exception{};
+		}
+
 		std::string output(input.size(), '\0');
 
 		const uint64_t* in_ptr = (const uint64_t*)input.data();
 		uint64_t* out_ptr = (uint64_t*)output.data();
 
-		for (size_t i = 0; i < input.size() / 8; i++)
+		for (size_t i = 0; i < input.size() / k_block_size; i++)
 		{
 			out_ptr[i] = CryptBlock(in_ptr[i], keys).to_ullong();
 		}
@@ -247,9 +257,19 @@ namespace des::v1
 		return block;
 	}
 
-	DESParallel::DESParallel(const std::string& key) :
+	DESParallel::DESParallel(const std::string& key, size_t group_size) :
 		DES(key)
-	{}
+	{
+		if (key.size() != k_min_key_size)
+		{
+			throw Exception{};
+		}
+
+		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
+		{
+			throw Exception{};
+		}
+	}
 
 	std::string DESParallel::Encrypt(const std::string& input) const
 	{
@@ -263,6 +283,11 @@ namespace des::v1
 
 	std::string DESParallel::Crypt(const std::string& input, const DES::RoundKey keys[16]) const
 	{
+		if (input.size() == 0 || input.size() % k_block_size != 0)
+		{
+			throw Exception{};
+		}
+
 		std::string output(input.size(), '\0');
 
 		const uint64_t* in_ptr = (const uint64_t*)input.data();
@@ -271,7 +296,7 @@ namespace des::v1
 		int i;
 
 #pragma omp parallel for num_threads(16)
-		for (i = 0; i < input.size() / 8; i++)
+		for (i = 0; i < input.size() / k_block_size; i++)
 		{
 			out_ptr[i] = CryptBlock(in_ptr[i], keys).to_ullong();
 		}

@@ -24,6 +24,12 @@
     <ClCompile Include="DESv1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AESv1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AESv2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DESv1.h">
@@ -33,6 +39,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AESv1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AESv2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
