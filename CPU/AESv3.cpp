@@ -1,10 +1,10 @@
-#include "AESv2.h"
+#include "AESv3.h"
 
 #include "../Shared/Shared.h"
 
-namespace aes::v2
+namespace aes::v3
 {
-	const unsigned char sbox[16][16] = {
+	const unsigned char sbox2d[16][16] = {
 		{0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76},
 		{0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0},
 		{0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15},
@@ -23,7 +23,9 @@ namespace aes::v2
 		{0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16}
 	};
 
-	const unsigned char inv_sbox[16][16] = {
+	const unsigned char* const sbox = (const unsigned char*)sbox2d;
+
+	const unsigned char inv_sbox2d[16][16] = {
 		{0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb},
 		{0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb},
 		{0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e},
@@ -41,6 +43,8 @@ namespace aes::v2
 		{0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61},
 		{0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d}
 	};
+
+	const unsigned char* const inv_sbox = (const unsigned char*)inv_sbox2d;
 
 	const unsigned char EXP_2[] = {
 		0x00, 0x02, 0x04, 0x06, 0x08, 0x0a, 0x0c, 0x0e, 0x10, 0x12, 0x14, 0x16,
@@ -191,23 +195,53 @@ namespace aes::v2
 		0xd7, 0xd9, 0xcb, 0xc5, 0xef, 0xe1, 0xf3, 0xfd, 0xa7, 0xa9, 0xbb, 0xb5,
 		0x9f, 0x91, 0x83, 0x8d
 	};
-	
+
 	const unsigned char rcon[11] = { 0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36 };
 
-	void SubWord(unsigned char input[4])
+	void SubBytesShift(const unsigned char block[16], unsigned char temp[16])
 	{
-		for (size_t i = 0; i < 4; i++)
-		{
-			input[i] = sbox[input[i] / 16][input[i] % 16];
-		}
+		temp[0] = sbox[block[0]];
+		temp[1] = sbox[block[5]];
+		temp[2] = sbox[block[10]];
+		temp[3] = sbox[block[15]];
+
+		temp[4] = sbox[block[4]];
+		temp[5] = sbox[block[9]];
+		temp[6] = sbox[block[14]];
+		temp[7] = sbox[block[3]];
+
+		temp[8] = sbox[block[8]];
+		temp[9] = sbox[block[13]];
+		temp[10] = sbox[block[2]];
+		temp[11] = sbox[block[7]];
+
+		temp[12] = sbox[block[12]];
+		temp[13] = sbox[block[1]];
+		temp[14] = sbox[block[6]];
+		temp[15] = sbox[block[11]];
 	}
 
-	void InvSubWord(unsigned char input[4])
+	void InvSubBytesShift(const unsigned char block[16], unsigned char temp[16])
 	{
-		for (size_t i = 0; i < 4; i++)
-		{
-			input[i] = inv_sbox[input[i] / 16][input[i] % 16];
-		}
+		temp[0] = inv_sbox[block[0]];
+		temp[1] = inv_sbox[block[13]];
+		temp[2] = inv_sbox[block[10]];
+		temp[3] = inv_sbox[block[7]];
+
+		temp[4] = inv_sbox[block[4]];
+		temp[5] = inv_sbox[block[1]];
+		temp[6] = inv_sbox[block[14]];
+		temp[7] = inv_sbox[block[11]];
+
+		temp[8] = inv_sbox[block[8]];
+		temp[9] = inv_sbox[block[5]];
+		temp[10] = inv_sbox[block[2]];
+		temp[11] = inv_sbox[block[15]];
+
+		temp[12] = inv_sbox[block[12]];
+		temp[13] = inv_sbox[block[9]];
+		temp[14] = inv_sbox[block[6]];
+		temp[15] = inv_sbox[block[3]];
 	}
 
 	template<class T>
@@ -220,66 +254,62 @@ namespace aes::v2
 		d = temp;
 	}
 
-	template<class T>
-	void Shift2(T& a, T& b, T& c, T& d)
+	void Move(const unsigned char input[4], unsigned char output[4])
 	{
-		std::swap<T>(a, c);
-		std::swap<T>(b, d);
+		for (size_t i = 0; i < 4; i++)
+		{
+			output[i] = input[i];
+		}
 	}
 
-	template<class T>
-	void Shift3(T& a, T& b, T& c, T& d)
+	void XORMove(const unsigned char input[4], unsigned char output[4], const unsigned char modifier[4])
 	{
-		T temp = d;
-		d = c;
-		c = b;
-		b = a;
-		a = temp;
+		for (size_t i = 0; i < 4; i++)
+		{
+			output[i] = input[i] xor modifier[i];
+		}
 	}
 
-	template<size_t KeyCount, size_t SubkeyCount>
-	void KeyExpansion(const unsigned char(*input)[4], AES::RoundKey* output)
+	template<size_t Nk, size_t Nr, size_t Nb>
+	void KeyExpansion(const unsigned char* input, unsigned char* output)
 	{
 		// First
-		for (size_t sub_key = 0; sub_key < SubkeyCount; sub_key++)
+		for (size_t i = 0; i < Nk * 4; i++)
 		{
-			for (size_t i = 0; i < 4; i++)
-			{
-				output[0].bytes[sub_key][i] = input[sub_key][i];
-			}
+			output[i] = input[i];
 		}
 
-		for (size_t key = 1; key < KeyCount; key++)
+		unsigned char temp[4];
+
+		for (size_t block = Nk; block < Nb * (Nr + 1); block++)
 		{
-			unsigned char temp[4];
-
 			for (size_t i = 0; i < 4; i++)
 			{
-				temp[i] = output[key - 1].bytes[SubkeyCount - 1][i];
+				temp[i] = output[((block - 1) * 4) + i];
 			}
 
-			Shift1(temp[0], temp[1], temp[2], temp[3]);
-
-			SubWord(temp);
-
-			temp[0] = temp[0] xor rcon[key];
-
-			for (size_t i = 0; i < 4; i++)
+			if (block % Nk == 0)
 			{
-				output[key].bytes[0][i] = output[key - 1].bytes[0][i] xor temp[i];
-			}
-
-			for (size_t sub_key = 1; sub_key < SubkeyCount; sub_key++)
-			{
-				if ((SubkeyCount > 6) && (sub_key == 4))
-				{
-					SubWord(temp);
-				}
+				Shift1(temp[0], temp[1], temp[2], temp[3]);
 
 				for (size_t i = 0; i < 4; i++)
 				{
-					output[key].bytes[sub_key][i] = output[key - 1].bytes[sub_key][i] xor output[key].bytes[sub_key - 1][i];
+					temp[i] = sbox[temp[i]];
 				}
+
+				temp[0] = temp[0] xor rcon[block / Nk];
+			}
+			else if (Nk > 6 && block % Nk == 4)
+			{
+				for (size_t i = 0; i < 4; i++)
+				{
+					temp[i] = sbox[temp[i]];
+				}
+			}
+
+			for (size_t i = 0; i < 4; i++)
+			{
+				output[(block * 4) + i] = output[((block - Nk) * 4) + i] xor temp[i];
 			}
 		}
 	}
@@ -293,21 +323,21 @@ namespace aes::v2
 			m_key_bits = 128;
 			m_rounds = 10;
 
-			KeyExpansion<10 + 1, 128 / 32>((const unsigned char(*)[4])key.data(), m_subkeys);
+			KeyExpansion<4, 10, 128 / 32>((const unsigned char*)key.data(), m_subkeys);
 			break;
 
 		case 24:
 			m_key_bits = 192;
 			m_rounds = 12;
 
-			KeyExpansion<12 + 1, 192 / 32>((const unsigned char(*)[4])key.data(), m_subkeys);
+			KeyExpansion<6, 12, 192 / 48>((const unsigned char*)key.data(), m_subkeys);
 			break;
 
 		case 32:
 			m_key_bits = 256;
 			m_rounds = 14;
 
-			KeyExpansion<14 + 1, 256 / 32>((const unsigned char(*)[4])key.data(), m_subkeys);
+			KeyExpansion<8, 14, 256 / 64>((const unsigned char*)key.data(), m_subkeys);
 			break;
 
 		default:
@@ -320,114 +350,124 @@ namespace aes::v2
 
 	}
 
-	void AES::AddRoundKey(unsigned char state[16], size_t index) const
-	{
-		const unsigned char* key_bytes = (const unsigned char*)m_subkeys[index].bytes;
-
-		for (size_t i = 0; i < 4 * 4; i++)
-		{
-			state[i] = state[i] xor key_bytes[i];
-		}
-	}
-
-	void AES::SubBytes(unsigned char state[16]) const
-	{
-		for (size_t i = 0; i < 16; i += 4)
-		{
-			SubWord(state + i);
-		}
-	}
-
-	void AES::ShiftRows(unsigned char state[16]) const
-	{
-		Shift1(state[1], state[5], state[9], state[13]);
-		Shift2(state[2], state[6], state[10], state[14]);
-		Shift3(state[3], state[7], state[11], state[15]);
-	}
-
-	void AES::MixColumns(unsigned char state[4][4]) const
-	{
-		for (size_t i = 0; i < 4; i++)
-		{
-			uint8_t col[4] = { state[i][0], state[i][1], state[i][2], state[i][3] };
-
-			state[i][0] = EXP_2[col[0]] ^ EXP_3[col[1]] ^ col[2] ^ col[3];
-			state[i][1] = col[0] ^ EXP_2[col[1]] ^ EXP_3[col[2]] ^ col[3];
-			state[i][2] = col[0] ^ col[1] ^ EXP_2[col[2]] ^ EXP_3[col[3]];
-			state[i][3] = EXP_3[col[0]] ^ col[1] ^ col[2] ^ EXP_2[col[3]];
-		}
-	}
-
-	void AES::InvSubBytes(unsigned char state[16]) const
-	{
-		for (size_t i = 0; i < 16; i += 4)
-		{
-			InvSubWord(state + i);
-		}
-	}
-
-	void AES::InvShiftRows(unsigned char state[16]) const
-	{
-		Shift3(state[1], state[5], state[9], state[13]);
-		Shift2(state[2], state[6], state[10], state[14]);
-		Shift1(state[3], state[7], state[11], state[15]);
-	}
-
-	void AES::InvMixColumns(unsigned char state[4][4]) const
-	{
-		for (size_t i = 0; i < 4; i++)
-		{
-			uint8_t col[4] = { state[i][0], state[i][1], state[i][2], state[i][3] };
-
-			state[i][0] = EXP_14[col[0]] ^ EXP_11[col[1]] ^ EXP_13[col[2]] ^ EXP_9[col[3]];
-			state[i][1] = EXP_9[col[0]] ^ EXP_14[col[1]] ^ EXP_11[col[2]] ^ EXP_13[col[3]];
-			state[i][2] = EXP_13[col[0]] ^ EXP_9[col[1]] ^ EXP_14[col[2]] ^ EXP_11[col[3]];
-			state[i][3] = EXP_11[col[0]] ^ EXP_13[col[1]] ^ EXP_9[col[2]] ^ EXP_14[col[3]];
-		}
-	}
-
 	void AES::EncryptBlock(unsigned char block[16]) const
 	{
-		AddRoundKey(block, 0);
+		{
+			//const unsigned char* const key_bytes = m_subkeys;
+
+			for (size_t i = 0; i < 4 * 4; i++)
+			{
+				block[i] = block[i] xor m_subkeys[i];
+			}
+		}
+
+		uint8_t temp[16];
 
 		for (size_t i = 1; i < m_rounds; i++)
 		{
-			SubBytes(block);
+			SubBytesShift(block, temp);
 
-			ShiftRows(block);
+			// Mix Columns
 
-			MixColumns((unsigned char(*)[4])block);
+			block[0] = EXP_2[temp[0]] ^ EXP_3[temp[1]] ^ temp[2] ^ temp[3];
+			block[1] = temp[0] ^ EXP_2[temp[1]] ^ EXP_3[temp[2]] ^ temp[3];
+			block[2] = temp[0] ^ temp[1] ^ EXP_2[temp[2]] ^ EXP_3[temp[3]];
+			block[3] = EXP_3[temp[0]] ^ temp[1] ^ temp[2] ^ EXP_2[temp[3]];
 
-			AddRoundKey(block, i);
+			block[4] = EXP_2[temp[4]] ^ EXP_3[temp[5]] ^ temp[6] ^ temp[7];
+			block[5] = temp[4] ^ EXP_2[temp[5]] ^ EXP_3[temp[6]] ^ temp[7];
+			block[6] = temp[4] ^ temp[5] ^ EXP_2[temp[6]] ^ EXP_3[temp[7]];
+			block[7] = EXP_3[temp[4]] ^ temp[5] ^ temp[6] ^ EXP_2[temp[7]];
+
+			block[8] = EXP_2[temp[8]] ^ EXP_3[temp[9]] ^ temp[10] ^ temp[11];
+			block[9] = temp[8] ^ EXP_2[temp[9]] ^ EXP_3[temp[10]] ^ temp[11];
+			block[10] = temp[8] ^ temp[9] ^ EXP_2[temp[10]] ^ EXP_3[temp[11]];
+			block[11] = EXP_3[temp[8]] ^ temp[9] ^ temp[10] ^ EXP_2[temp[11]];
+
+			block[12] = EXP_2[temp[12]] ^ EXP_3[temp[13]] ^ temp[14] ^ temp[15];
+			block[13] = temp[12] ^ EXP_2[temp[13]] ^ EXP_3[temp[14]] ^ temp[15];
+			block[14] = temp[12] ^ temp[13] ^ EXP_2[temp[14]] ^ EXP_3[temp[15]];
+			block[15] = EXP_3[temp[12]] ^ temp[13] ^ temp[14] ^ EXP_2[temp[15]];
+
+			{
+				const unsigned char* const key_bytes = m_subkeys + (i * 4 * 4);
+
+				for (size_t i = 0; i < 4 * 4; i++)
+				{
+					block[i] = block[i] xor key_bytes[i];
+				}
+			}
 		}
 
-		SubBytes(block);
+		SubBytesShift(block, temp);
+		
+		{
+			const unsigned char* const key_bytes = m_subkeys + (m_rounds * 4 * 4);
 
-		ShiftRows(block);
-
-		AddRoundKey(block, m_rounds);
+			for (size_t i = 0; i < 4 * 4; i++)
+			{
+				block[i] = temp[i] xor key_bytes[i];
+			}
+		}
 	}
 
 	void AES::DecryptBlock(unsigned char block[16]) const
 	{
-		AddRoundKey(block, m_rounds);
+		{
+			const unsigned char* const key_bytes = m_subkeys + (m_rounds * 4 * 4);
+
+			for (size_t i = 0; i < 4 * 4; i++)
+			{
+				block[i] = block[i] xor key_bytes[i];
+			}
+		}
+
+		uint8_t temp[16];
 
 		for (size_t i = m_rounds - 1; i > 0; i--)
 		{
-			InvShiftRows(block);
+			InvSubBytesShift(block, temp);
 
-			InvSubBytes(block);
+			{
+				const unsigned char* const key_bytes = m_subkeys + (i * 4 * 4);
 
-			AddRoundKey(block, i);
+				for (size_t i = 0; i < 4 * 4; i++)
+				{
+					temp[i] = temp[i] xor key_bytes[i];
+				}
+			}
 
-			InvMixColumns((unsigned char(*)[4])block);
+			block[0] = EXP_14[temp[0]] ^ EXP_11[temp[1]] ^ EXP_13[temp[2]] ^ EXP_9[temp[3]];
+			block[1] = EXP_9[temp[0]] ^ EXP_14[temp[1]] ^ EXP_11[temp[2]] ^ EXP_13[temp[3]];
+			block[2] = EXP_13[temp[0]] ^ EXP_9[temp[1]] ^ EXP_14[temp[2]] ^ EXP_11[temp[3]];
+			block[3] = EXP_11[temp[0]] ^ EXP_13[temp[1]] ^ EXP_9[temp[2]] ^ EXP_14[temp[3]];
+
+			block[4] = EXP_14[temp[4]] ^ EXP_11[temp[5]] ^ EXP_13[temp[6]] ^ EXP_9[temp[7]];
+			block[5] = EXP_9[temp[4]] ^ EXP_14[temp[5]] ^ EXP_11[temp[6]] ^ EXP_13[temp[7]];
+			block[6] = EXP_13[temp[4]] ^ EXP_9[temp[5]] ^ EXP_14[temp[6]] ^ EXP_11[temp[7]];
+			block[7] = EXP_11[temp[4]] ^ EXP_13[temp[5]] ^ EXP_9[temp[6]] ^ EXP_14[temp[7]];
+
+			block[8] = EXP_14[temp[8]] ^ EXP_11[temp[9]] ^ EXP_13[temp[10]] ^ EXP_9[temp[11]];
+			block[9] = EXP_9[temp[8]] ^ EXP_14[temp[9]] ^ EXP_11[temp[10]] ^ EXP_13[temp[11]];
+			block[10] = EXP_13[temp[8]] ^ EXP_9[temp[9]] ^ EXP_14[temp[10]] ^ EXP_11[temp[11]];
+			block[11] = EXP_11[temp[8]] ^ EXP_13[temp[9]] ^ EXP_9[temp[10]] ^ EXP_14[temp[11]];
+
+			block[12] = EXP_14[temp[12]] ^ EXP_11[temp[13]] ^ EXP_13[temp[14]] ^ EXP_9[temp[15]];
+			block[13] = EXP_9[temp[12]] ^ EXP_14[temp[13]] ^ EXP_11[temp[14]] ^ EXP_13[temp[15]];
+			block[14] = EXP_13[temp[12]] ^ EXP_9[temp[13]] ^ EXP_14[temp[14]] ^ EXP_11[temp[15]];
+			block[15] = EXP_11[temp[12]] ^ EXP_13[temp[13]] ^ EXP_9[temp[14]] ^ EXP_14[temp[15]];
 		}
 
-		InvShiftRows(block);
+		InvSubBytesShift(block, temp);
 
-		InvSubBytes(block);
+		{
+			const unsigned char* const key_bytes = m_subkeys;
 
-		AddRoundKey(block, 0);
+			for (size_t i = 0; i < 4 * 4; i++)
+			{
+				block[i] = temp[i] xor key_bytes[i];
+			}
+		}
 	}
 
 	std::string AES::Encrypt(const std::string& input) const

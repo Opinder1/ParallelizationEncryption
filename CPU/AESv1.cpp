@@ -514,7 +514,12 @@ namespace aes::v1
 
 	AESParallel::AESParallel(const std::string& key, size_t group_size) :
 		AES(key)
-	{}
+	{
+		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
+		{
+			throw Exception{};
+		}
+	}
 
 	std::string AESParallel::Encrypt(const std::string& input) const
 	{

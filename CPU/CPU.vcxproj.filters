@@ -30,6 +30,9 @@
     <ClCompile Include="AESv2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AESv3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DESv1.h">
@@ -45,6 +48,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AESv2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AESv3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
