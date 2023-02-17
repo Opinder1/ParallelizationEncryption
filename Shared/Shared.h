@@ -127,8 +127,9 @@ std::bitset<A> Permute(std::bitset<B> set, int table[A])
 {
 	std::bitset<A> out;
 
-	for (size_t i = 0; i < A; i++) {
-		out[i] = set[table[i] - 1];
+	for (size_t i = 0; i < A; i++)
+	{
+		out.set(i, set.test(table[i] - 1));
 	}
 	return out;
 }

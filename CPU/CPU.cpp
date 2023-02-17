@@ -4,9 +4,13 @@
 
 #include "MbedTest.h"
 #include "DESv1.h"
+#include "DESv2.h"
 #include "AESv1.h"
 #include "AESv2.h"
 #include "AESv3.h"
+#include "../GPU/AES.h"
+#include "../GPU/AEScl.h"
+#include "../GPU/DES.h"
 
 void TestEncrypt(const EncryptBase& base, size_t block_size)
 {
@@ -52,16 +56,16 @@ void TestCrypt()
 	const std::string input(64, 'A');
 
 	{
-		T des(key);
+		T algorithmn(key);
 
-		std::string ciphertext = des.Encrypt(input);
-		std::string plaintext = des.Decrypt(ciphertext);
+		std::string ciphertext = algorithmn.Encrypt(input);
+		std::string plaintext = algorithmn.Decrypt(ciphertext);
 
 		EXPECT_STREQ(input.c_str(), plaintext.c_str());
 
-		TestEncrypt(des, T::k_block_size);
+		TestEncrypt(algorithmn, T::k_block_size);
 
-		TestDecrypt(des, T::k_block_size);
+		TestDecrypt(algorithmn, T::k_block_size);
 	}
 }
 
@@ -117,6 +121,9 @@ void TimeEncrypt(const EncryptBase& des, const std::string& in, std::string out)
 
 int main()
 {
+	TestAESCL();
+	return 0;
+
 	//EXPECT_EQ(mbed::DES::Test(), 0);
 	//EXPECT_EQ(mbed::AES::Test(), 0);
 
@@ -129,107 +136,62 @@ int main()
 	TestCrypt<mbed::AES>();
 	TestParallelCrypt<mbed::AESParallel>();
 
-	TestCrypt<des::v1::DES>();
-	TestParallelCrypt<des::v1::DESParallel>();
+	TestCrypt<des::v2::DES>();
+	TestParallelCrypt<des::v2::DESParallel>();
 
 	TestCrypt<aes::v3::AES>();
 	TestParallelCrypt<aes::v3::AESParallel>();
 
-	TestVersions<aes::v1::AES, aes::v2::AES, aes::v3::AES>();
+	TestParallelCrypt<aes::cuda::AES>();
 
-	{
-		mbed::DES des(BinToStr("1010101010111011000010010001100000100111001101101100110011011101"));
-		std::string in(1024 * 1024 * 10, 'A');
-		std::string out;
+	TestParallelCrypt<des::cuda::DES>();
 
-		printf("Time DES (mbed): %f\n", TimeFunc(10, TimeEncrypt, des, in, out));
-	}
+	TestVersions<aes::v1::AES, aes::v2::AES, aes::v3::AES, aes::cuda::AES>();
+
+	TestVersions<des::v1::DES, des::v2::DES, des::cuda::DES>();
+
+	const std::string in(1024 * 1024 * 20, 'A');
+	std::string out;
 
 	{
 		mbed::DESParallel des(BinToStr("1010101010111011000010010001100000100111001101101100110011011101"), 1);
-		std::string in(1024 * 1024 * 10, 'A');
-		std::string out;
 
 		printf("Time DESParallel (mbed): %f\n", TimeFunc(10, TimeEncrypt, des, in, out));
 	}
 
 	{
-		mbed::TripleDES des(BinToStr("101010101011101100001001000110000010011100110110110011001101110110101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-		std::string in(1024 * 1024 * 10, 'A');
-		std::string out;
-
-		printf("Time TripleDES (mbed): %f\n", TimeFunc(10, TimeEncrypt, des, in, out));
-	}
-
-	{
 		mbed::TripleDESParallel des(BinToStr("101010101011101100001001000110000010011100110110110011001101110110101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"), 1);
-		std::string in(1024 * 1024 * 10, 'A');
-		std::string out;
 
 		printf("Time TripleDESParallel (mbed): %f\n", TimeFunc(10, TimeEncrypt, des, in, out));
 	}
 
 	{
-		mbed::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-		std::string in(1024 * 1024 * 10, 'A');
-		std::string out;
-
-		printf("Time AES (mbed): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
-	}
-
-	{
 		mbed::AESParallel aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-		std::string in(1024 * 1024 * 10, 'A');
-		std::string out;
 
 		printf("Time AESParallel (mbed): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
 	}
 
 	{
-		aes::v1::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-		std::string in(1024 * 1024 * 10, 'A');
-		std::string out;
-
-		printf("Time AES (v1): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
-	}
-
-	{
 		aes::v1::AESParallel aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-		std::string in(1024 * 1024 * 10, 'A');
-		std::string out;
 
 		printf("Time AESParallel (v1): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
-	}
-	
-	{
-		aes::v2::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-		std::string in(1024 * 1024 * 10, 'A');
-		std::string out;
-
-		printf("Time AES (v2): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
 	}
 
 	{
 		aes::v2::AESParallel aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-		std::string in(1024 * 1024 * 10, 'A');
-		std::string out;
 
 		printf("Time AESParallel (v2): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
 	}
 
 	{
-		aes::v3::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-		std::string in(1024 * 1024 * 10, 'A');
-		std::string out;
+		aes::v3::AESParallel aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
 
-		printf("Time AES (v3): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
+		printf("Time AESParallel (v3): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
 	}
 
 	{
-		aes::v3::AESParallel aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-		std::string in(1024 * 1024 * 10, 'A');
-		std::string out;
+		aes::cuda::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
 
-		printf("Time AESParallel (v3): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
+		printf("Time AESParallel (gpu): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
 	}
 }

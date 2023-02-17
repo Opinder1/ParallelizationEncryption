@@ -300,14 +300,14 @@ namespace aes::v2
 			m_key_bits = 192;
 			m_rounds = 12;
 
-			KeyExpansion<12 + 1, 192 / 32>((const unsigned char(*)[4])key.data(), m_subkeys);
+			//KeyExpansion<12 + 1, 192 / 32>((const unsigned char(*)[4])key.data(), m_subkeys);
 			break;
 
 		case 32:
 			m_key_bits = 256;
 			m_rounds = 14;
 
-			KeyExpansion<14 + 1, 256 / 32>((const unsigned char(*)[4])key.data(), m_subkeys);
+			//KeyExpansion<14 + 1, 256 / 32>((const unsigned char(*)[4])key.data(), m_subkeys);
 			break;
 
 		default:

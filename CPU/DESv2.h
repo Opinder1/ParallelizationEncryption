@@ -5,7 +5,7 @@
 #include <bitset>
 #include <string>
 
-namespace des::v1
+namespace des::v2
 {
 	class DES : public EncryptBase
 	{
@@ -17,27 +17,25 @@ namespace des::v1
 
 		struct RoundKey
 		{
-			std::bitset<48> bytes;
+			unsigned char bytes[8][4] = {};
 		};
 
-	public:
-		DES(const std::string& key);
+		DES(const std::string& key, size_t group_size = 1);
 
 		~DES();
+
+		void EncryptInPlace(std::string& input) const;
+
+		void DecryptInPlace(std::string& input) const;
 
 		std::string Encrypt(const std::string& input) const override;
 
 		std::string Decrypt(const std::string& input) const override;
 
 	private:
-		std::string Crypt(const std::string& input, const DES::RoundKey keys[16]) const;
+		unsigned int m_rounds;
 
-	protected:
-		std::bitset<64> CryptBlock(std::bitset<64> block, const DES::RoundKey keys[16]) const;
-
-	protected:
-		RoundKey m_enc_keys[16];
-		RoundKey m_dec_keys[16];
+		unsigned char m_subkeys[240];
 	};
 
 	class DESParallel : public DES
@@ -45,11 +43,17 @@ namespace des::v1
 	public:
 		DESParallel(const std::string& key, size_t group_size = 1);
 
+		void EncryptInPlace(std::string& input) const;
+
+		void DecryptInPlace(std::string& input) const;
+
 		std::string Encrypt(const std::string& input) const override;
 
 		std::string Decrypt(const std::string& input) const override;
 
 	private:
-		std::string Crypt(const std::string& input, const DES::RoundKey keys[16]) const;
+		unsigned int m_rounds;
+
+		unsigned char m_subkeys[240];
 	};
 }
