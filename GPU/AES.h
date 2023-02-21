@@ -11,7 +11,7 @@
 #define GPU_API __declspec(dllexport)
 #endif
 
-namespace aes::cuda
+namespace cuda::aes
 {
 	class AES : public EncryptBase
 	{

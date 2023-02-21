@@ -123,13 +123,13 @@ void RotateLeft2Bits(std::bitset<S>& set, size_t start, size_t size)
 }
 
 template<size_t A, size_t B>
-std::bitset<A> Permute(std::bitset<B> set, int table[A])
+std::bitset<A> Permute(std::bitset<B> set, unsigned char table[A])
 {
 	std::bitset<A> out;
 
 	for (size_t i = 0; i < A; i++)
 	{
-		out.set(i, set.test(table[i] - 1));
+		out.set(i, set.test(table[i]));
 	}
 	return out;
 }

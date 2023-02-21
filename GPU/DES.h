@@ -11,7 +11,7 @@
 #define GPU_API __declspec(dllexport)
 #endif
 
-namespace des::cuda
+namespace cuda::des
 {
 	class DES : public EncryptBase
 	{

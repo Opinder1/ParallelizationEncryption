@@ -11,7 +11,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-namespace aes::cuda
+namespace cuda::aes
 {
 	CONSTANT unsigned char sbox[16 * 16] = {
 		0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
@@ -313,7 +313,7 @@ namespace aes::cuda
 			block[i] = block[i] ^ subkeys[i];
 		}
 
-		uint8_t temp[16];
+		unsigned char temp[16];
 
 		for (size_t i = 1; i < rounds; i++)
 		{
@@ -367,12 +367,13 @@ namespace aes::cuda
 
 		const unsigned char* const key_bytes = subkeys + (rounds * 4 * 4);
 
+#pragma unroll
 		for (size_t i = 0; i < 4 * 4; i++)
 		{
 			block[i] = block[i] ^ key_bytes[i];
 		}
 
-		uint8_t temp[16];
+		unsigned char temp[16];
 
 		for (size_t i = rounds - 1; i > 0; i--)
 		{
@@ -380,6 +381,7 @@ namespace aes::cuda
 
 			const unsigned char* const key_bytes = subkeys + (i * 4 * 4);
 
+#pragma unroll
 			for (size_t i = 0; i < 4 * 4; i++)
 			{
 				temp[i] = temp[i] ^ key_bytes[i];
@@ -408,6 +410,7 @@ namespace aes::cuda
 
 		InvSubBytesShift(block, temp);
 
+#pragma unroll
 		for (size_t i = 0; i < 4 * 4; i++)
 		{
 			block[i] = temp[i] ^ subkeys[i];
@@ -501,6 +504,12 @@ namespace aes::cuda
 			fprintf(stderr, "cudaMemcpy failed!");
 			throw Exception{};
 		}
+
+		if (cudaFree(mem) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaFree failed!");
+			throw Exception{};
+		}
 	}
 
 	void AES::DecryptInPlace(std::string& input) const
@@ -530,6 +539,12 @@ namespace aes::cuda
 		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
 		{
 			fprintf(stderr, "cudaMemcpy failed!");
+			throw Exception{};
+		}
+
+		if (cudaFree(mem) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaFree failed!");
 			throw Exception{};
 		}
 	}

@@ -91,23 +91,25 @@ void TestParallelCrypt()
 template<class Main, class... Others>
 void TestVersions()
 {
-	const std::string key(Main::k_min_key_size, 'A');
+	const std::string key(Main::k_min_key_size, 'B');
 
 	const std::string input(64, 'A');
 
 	const Main main(key);
 
-	std::string main_output = main.Encrypt(input);
+	std::string main_enc = main.Encrypt(input);
+	
+	std::string main_dec = main.Decrypt(main_enc);
 
-	PrintHexStr("main", main_output);
-
-	auto test = [&main_output, &input](const EncryptBase& alg)
+	auto test = [&main_enc, &main_dec, &input](const EncryptBase& alg)
 	{
-		std::string other_output = alg.Encrypt(input);
+		std::string other_enc = alg.Encrypt(input);
 
-		PrintHexStr("other", other_output);
+		EXPECT_STREQ(main_enc.c_str(), other_enc.c_str());
 
-		EXPECT_EQ(main_output.c_str(), main_output.c_str());
+		std::string other_dec = alg.Decrypt(other_enc);
+
+		EXPECT_STREQ(main_dec.c_str(), other_dec.c_str());
 	};
 
 	(test(Others(key)), ...);
@@ -121,8 +123,7 @@ void TimeEncrypt(const EncryptBase& des, const std::string& in, std::string out)
 
 int main()
 {
-	TestAESCL();
-	return 0;
+	opencl::InitOpenCL();
 
 	//EXPECT_EQ(mbed::DES::Test(), 0);
 	//EXPECT_EQ(mbed::AES::Test(), 0);
@@ -136,19 +137,26 @@ int main()
 	TestCrypt<mbed::AES>();
 	TestParallelCrypt<mbed::AESParallel>();
 
+	TestCrypt<des::v1::DES>();
+	TestParallelCrypt<des::v1::DESParallel>();
+
 	TestCrypt<des::v2::DES>();
 	TestParallelCrypt<des::v2::DESParallel>();
 
 	TestCrypt<aes::v3::AES>();
 	TestParallelCrypt<aes::v3::AESParallel>();
 
-	TestParallelCrypt<aes::cuda::AES>();
+	TestParallelCrypt<cuda::aes::AES>();
 
-	TestParallelCrypt<des::cuda::DES>();
+	TestParallelCrypt<cuda::des::DES>();
 
-	TestVersions<aes::v1::AES, aes::v2::AES, aes::v3::AES, aes::cuda::AES>();
+	TestParallelCrypt<opencl::aes::AES>();
 
-	TestVersions<des::v1::DES, des::v2::DES, des::cuda::DES>();
+	//TestParallelCrypt<opencl::des::DES>();
+
+	TestVersions<aes::v1::AES, aes::v2::AES, aes::v3::AES, cuda::aes::AES, opencl::aes::AES>();
+
+	TestVersions<des::v1::DES, des::v2::DES, cuda::des::DES>();
 
 	const std::string in(1024 * 1024 * 20, 'A');
 	std::string out;
@@ -190,8 +198,16 @@ int main()
 	}
 
 	{
-		aes::cuda::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
+		cuda::aes::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
 
-		printf("Time AESParallel (gpu): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
+		printf("Time AESParallel (cuda): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
 	}
+
+	{
+		opencl::aes::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
+
+		printf("Time AESParallel (opencl): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
+	}
+
+	opencl::ShutdownOpenCL();
 }

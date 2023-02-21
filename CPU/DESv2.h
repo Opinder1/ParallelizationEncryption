@@ -32,10 +32,9 @@ namespace des::v2
 
 		std::string Decrypt(const std::string& input) const override;
 
-	private:
-		unsigned int m_rounds;
-
-		unsigned char m_subkeys[240];
+	protected:
+		unsigned char m_enc_subkeys[96] = { 0 };
+		unsigned char m_dec_subkeys[96] = { 0 };
 	};
 
 	class DESParallel : public DES
@@ -50,10 +49,5 @@ namespace des::v2
 		std::string Encrypt(const std::string& input) const override;
 
 		std::string Decrypt(const std::string& input) const override;
-
-	private:
-		unsigned int m_rounds;
-
-		unsigned char m_subkeys[240];
 	};
 }

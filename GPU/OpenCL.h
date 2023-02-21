@@ -4,113 +4,168 @@
 #include <memory>
 #include <unordered_map>
 
-void InitOpenCL();
+#ifdef DLL_IMPORT
+#define GPU_API __declspec(dllimport)
+#else
+#define GPU_API __declspec(dllexport)
+#endif
 
-void ShutdownOpenCL();
-
-class Arg
+namespace opencl
 {
-	friend class Program;
+	GPU_API void InitOpenCL();
 
-public:
-	Arg(const Arg&) = delete;
-	Arg& operator=(const Arg&) = delete;
+	GPU_API void ShutdownOpenCL();
 
-	Arg(Arg&&) = default;
-	Arg& operator=(Arg&&) = default;
+	class Program;
 
-	Arg();
-	~Arg();
-
-private:
-	virtual void Apply(void* kernel, size_t index) const {};
-
-	virtual void Read() const {};
-};
-
-class IntInput : public Arg
-{
-public:
-	IntInput();
-
-	void SetData(size_t data);
-
-private:
-	void Apply(void* kernel, size_t index) const override;
-
-	void Read() const override {};
-
-private:
-	size_t m_data;
-};
-
-class ArrayInput : public Arg
-{
-public:
-	ArrayInput();
-
-	~ArrayInput();
-
-	void SetData(const char* data, size_t size);
-
-private:
-	void Apply(void* kernel, size_t index) const override;
-
-	void Read() const override {};
-
-private:
-	void* m_buffer;
-};
-
-class ArrayIO : public Arg
-{
-public:
-	ArrayIO();
-
-	~ArrayIO();
-
-	void SetData(char* data, size_t size);
-
-private:
-	void Apply(void* kernel, size_t index) const override;
-
-	void Read() const override;
-
-private:
-	void* m_buffer;
-
-	char* m_data;
-	size_t m_size;
-};
-
-class Program
-{
-	struct Function
+	class Arg
 	{
-		void* kernel;
+		friend class Program;
 
-		std::vector<std::unique_ptr<Arg>> args;
+	public:
+		Arg(const Arg&) = delete;
+		Arg& operator=(const Arg&) = delete;
+
+		Arg(Arg&&) = default;
+		Arg& operator=(Arg&&) = default;
+
+		Arg(const Program& program);
+		~Arg();
+
+	protected:
+		void HandleError(int err) const;
+
+	private:
+		virtual void Apply(void* kernel, size_t index) const {};
+
+		virtual void Read() const {};
+
+	private:
+		const Program& m_program;
 	};
 
-	using Map = std::unordered_map<std::string, Function>;
+	class IntInput : public Arg
+	{
+	public:
+		IntInput(const Program& program);
 
-	using FunctionID = Map::iterator;
+		void SetData(size_t data);
 
-public:
-	Program(const std::string& file);
+	private:
+		void Apply(void* kernel, size_t index) const override;
 
-	~Program();
+		void Read() const override {};
 
-	FunctionID GetFunction(const std::string& name);
+	private:
+		unsigned int m_data;
+	};
 
-	void AddArg(FunctionID, Arg&& arg);
+	class ArrayInput : public Arg
+	{
+	public:
+		ArrayInput(const Program& program);
 
-	Arg& GetArg(FunctionID, size_t index);
+		~ArrayInput();
 
-	void RunFunction(FunctionID);
+		void SetData(const void* data, size_t size);
 
-private:
-	void* m_program = nullptr;
+	private:
+		void Apply(void* kernel, size_t index) const override;
 
-	Map m_functions;
-};
+		void Read() const override {};
+
+		void Dealloc();
+
+		void Realloc(size_t size);
+
+	private:
+		void* m_buffer;
+
+		size_t m_size;
+	};
+
+	class ArrayIO : public Arg
+	{
+	public:
+		ArrayIO(const Program& program);
+
+		~ArrayIO();
+
+		void SetData(void* data, size_t size);
+
+	private:
+		void Apply(void* kernel, size_t index) const override;
+
+		void Read() const override;
+
+		void Dealloc();
+
+		void Realloc(size_t size);
+
+	private:
+		void* m_buffer;
+
+		void* m_data;
+		size_t m_size;
+	};
+
+	class Program
+	{
+		friend Arg;
+
+		struct Function
+		{
+			void* kernel;
+
+			std::string name;
+
+			std::vector<std::unique_ptr<Arg>> args;
+		};
+
+	public:
+		using FunctionID = size_t;
+
+	public:
+		Program(const std::string& file);
+
+		~Program();
+
+		FunctionID MakeFunction(const std::string& name);
+
+		template<class T>
+		void AddArg(FunctionID id)
+		{
+			Function& function = m_functions[id];
+
+			Arg& arg = *function.args.emplace_back(std::make_unique<T>(*this));
+
+			arg.Apply(function.kernel, function.args.size() - 1);
+		}
+
+		template<class T, class Callable>
+		void UpdateArg(FunctionID id, size_t index, Callable callable) const
+		{
+			void* kernel;
+
+			Arg& arg = _GetArg(id, index, kernel);
+
+			callable(dynamic_cast<T&>(arg));
+
+			arg.Apply(kernel, index);
+		}
+
+		void RunFunction(FunctionID id, size_t elements) const;
+
+	private:
+		Arg& _GetArg(FunctionID id, size_t index, void*& kernel) const;
+
+		void _HandleError(int err) const;
+
+	private:
+		void* m_program = nullptr;
+
+		mutable int m_err = 0;
+
+		std::vector<Function> m_functions;
+	};
+}

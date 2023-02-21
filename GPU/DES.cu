@@ -13,7 +13,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-namespace des::cuda
+namespace cuda::des
 {
 	CONSTANT unsigned char key_perm[56] = {
 		56,	48,	40,	32,	24,	16,	8,	0,
@@ -130,7 +130,7 @@ namespace des::cuda
 		18,	12,	29,	5,	21,	10,	3,	24,
 	};
 
-	DEVICE void Permute(const unsigned char* set, unsigned char* out, unsigned char* table, size_t table_size)
+	DEVICE void Permute(const unsigned char* set, unsigned char* out, const unsigned char* table, size_t table_size)
 	{
 		for (size_t i = 0; i < table_size / 8; i++)
 		{
@@ -347,6 +347,11 @@ namespace des::cuda
 			throw Exception{};
 		}
 
+		if (key.size() != k_min_key_size)
+		{
+			throw Exception{};
+		}
+
 		if (cudaSetDevice(0) != cudaSuccess)
 		{
 			fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
@@ -362,7 +367,7 @@ namespace des::cuda
 		unsigned char subkeys[192] = {0};
 
 		unsigned char* enc_subkeys = subkeys;
-		unsigned char* dec_subkeys = subkeys + 96;
+		unsigned char* dec_subkeys = subkeys + (6 * 16) + (6 * 15);
 
 		unsigned char temp[7] = {0};
 		Permute((const unsigned char*)key.data(), temp, key_perm, 56);
@@ -394,7 +399,7 @@ namespace des::cuda
 			Permute(temp, dec_subkeys + 3, right_round_perm, 24);
 
 			enc_subkeys += 6;
-			dec_subkeys += 6;
+			dec_subkeys -= 6;
 		}
 
 		if (cudaMemcpy(m_subkeys, subkeys, 240, cudaMemcpyHostToDevice) != cudaSuccess)
@@ -438,6 +443,12 @@ namespace des::cuda
 			fprintf(stderr, "cudaMemcpy failed!");
 			throw Exception{};
 		}
+
+		if (cudaFree(mem) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaFree failed!");
+			throw Exception{};
+		}
 	}
 
 	void DES::DecryptInPlace(std::string& input) const
@@ -467,6 +478,12 @@ namespace des::cuda
 		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
 		{
 			fprintf(stderr, "cudaMemcpy failed!");
+			throw Exception{};
+		}
+
+		if (cudaFree(mem) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaFree failed!");
 			throw Exception{};
 		}
 	}

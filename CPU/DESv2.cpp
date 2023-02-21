@@ -5,20 +5,20 @@
 namespace des::v2
 {
 	unsigned char key_perm[56] = {
-		56,	48,	40,	32,	24,	16,	8,	0,
-		57,	49,	41,	33,	25,	17,	9,	1,
-		58,	50,	42,	34,	26,	18,	10,	2,
-		59,	51,	43,	35,	62,	54,	46,	38,
-		30,	22,	14,	6,	61,	53,	45,	37,
-		29,	21,	13,	5,	60,	52,	44,	36,
-		28,	20,	12,	4,	27,	19,	11,	3,
+		56, 48, 40, 32, 24, 16, 8,	0,
+		57, 49, 41, 33, 25, 17, 9,	1,
+		58, 50, 42, 34, 26, 18, 10, 2,
+		59, 51, 43, 35, 62, 54, 46, 38,
+		30, 22, 14, 6,	61, 53, 45, 37,
+		29, 21, 13, 5,	60, 52, 44, 36,
+		28, 20, 12, 4,	27, 19, 11, 3,
 	};
 
 	unsigned char left_round_perm[24] = {
-		13, 16, 10, 23, 0,  4,
-		2,  27, 14, 5,  20, 9,
-		22, 18, 11, 3,  25, 7,
-		15, 6,  26, 19, 12, 1,
+		13, 16, 10, 23, 0,	4,
+		2,	27, 14, 5,	20,	9,
+		22, 18, 11, 3,	25, 7,
+		15, 6,	26,	19, 12, 1,
 	};
 
 	unsigned char right_round_perm[24] = {
@@ -29,36 +29,34 @@ namespace des::v2
 	};
 
 	unsigned char initial_perm[64] = {
-		57,	49,	41,	33,	25,	17,	9,	1,
-		59,	51,	43,	35,	27,	19,	11,	3,
-		61,	53,	45,	37,	29,	21,	13,	5,
-		63,	55,	47,	39,	31,	23,	15,	7,
-		56,	48,	40,	32,	24,	16,	8,	0,
-		58,	50,	42,	34,	26,	18,	10,	2,
-		60,	52,	44,	36,	28,	20,	12,	4,
-		62,	54,	46,	38,	30,	22,	14,	6,
+		57, 49, 41, 33, 25, 17, 9,	1,
+		59, 51, 43, 35, 27, 19, 11, 3,
+		61, 53, 45, 37, 29, 21, 13, 5,
+		63, 55, 47, 39, 31, 23, 15, 7,
+		56, 48, 40, 32, 24, 16, 8,	0,
+		58, 50, 42, 34, 26, 18, 10, 2,
+		60, 52, 44, 36, 28, 20, 12, 4,
+		62, 54, 46, 38, 30, 22, 14, 6,
 	};
 
 	unsigned char final_perm[64] = {
-		39,	7,	47,	15,	55,	23,	63,	31,
-		38,	6,	46,	14,	54,	22,	62,	30,
-		37,	5,	45,	13,	53,	21,	61,	29,
-		36,	4,	44,	12,	52,	20,	60,	28,
-		35,	3,	43,	11,	51,	19,	59,	27,
-		34,	2,	42,	10,	50,	18,	58,	26,
-		33,	1,	41,	9,	49,	17,	57,	25,
-		32,	0,	40,	8,	48,	16,	56,	24,
+		39, 7,	47,	15,	55, 23, 63, 31,
+		38, 6,	46,	14,	54, 22, 62, 30,
+		37, 5,	45,	13,	53, 21, 61, 29,
+		36, 4,	44,	12,	52, 20, 60, 28,
+		35, 3,	43, 11,	51, 19, 59, 27,
+		34, 2,	42, 10,	50, 18, 58, 26,
+		33, 1,	41, 9,	49, 17, 57, 25,
+		32, 0,	40, 8,	48, 16, 56, 24,
 	};
 
 	unsigned char expansion[48] = {
-		31, 0,	1,	2,	3,	4,
-		3,	4,	5,	6,	7,	8,
-		7,	8,	9,	10,	11,	12,
-		11, 12, 13, 14, 15, 16,
-		15,	16, 17, 18, 19, 20,
-		19,	20, 21, 22, 23, 24,
-		23,	24, 25, 26, 27, 28,
-		27, 28, 29, 30, 31, 0,
+		31, 0,	1,	2,	3,	4,	3,	4,
+		5,	6,	7,	8,	7,	8,	9,	10,
+		11, 12, 11, 12, 13, 14, 15, 16,
+		15, 16, 17, 18, 19, 20, 19, 20,
+		21, 22, 23, 24, 23, 24, 25, 26,
+		27, 28, 27, 28, 29, 30, 31, 0,
 	};
 
 	unsigned char sbox[8][4][16] = {
@@ -113,24 +111,24 @@ namespace des::v2
 	};
 
 	unsigned char pbox[32] = {
-		15,	6,	19,	20,	28,	11,	27,	16,
-		0,	14,	22,	25,	4,	17,	30,	9,
-		1,	7,	23,	13,	31,	26,	2,	8,
-		18,	12,	29,	5,	21,	10,	3,	24,
+		15, 6,	19, 20, 28, 11, 27, 16,
+		0,	14, 22, 25, 4,	17, 30, 9,
+		1,	7,	23, 13, 31, 26, 2,	8,
+		18, 12, 29, 5,	21,	10, 3,	24,
 	};
 
-	void Permute(const unsigned char* set, unsigned char* out, unsigned char* table, size_t table_size)
+	void Permute(const unsigned char* set, unsigned char* out, const unsigned char* table, size_t table_size)
 	{
 		for (size_t i = 0; i < table_size / 8; i++)
 		{
-			out[i] = (!!(set[table[0] / 8] & (1 << (table[0] % 8))) << 0) |
-				(!!(set[table[1] / 8] & (1 << (table[1] % 8))) << 1) |
-				(!!(set[table[2] / 8] & (1 << (table[2] % 8))) << 2) |
-				(!!(set[table[3] / 8] & (1 << (table[3] % 8))) << 3) |
-				(!!(set[table[4] / 8] & (1 << (table[4] % 8))) << 4) |
-				(!!(set[table[5] / 8] & (1 << (table[5] % 8))) << 5) |
-				(!!(set[table[6] / 8] & (1 << (table[6] % 8))) << 6) |
-				(!!(set[table[7] / 8] & (1 << (table[7] % 8))) << 7);
+			out[i] =	(!!(set[table[0] / 8] & (1 << (table[0] % 8))) << 0) |
+						(!!(set[table[1] / 8] & (1 << (table[1] % 8))) << 1) |
+						(!!(set[table[2] / 8] & (1 << (table[2] % 8))) << 2) |
+						(!!(set[table[3] / 8] & (1 << (table[3] % 8))) << 3) |
+						(!!(set[table[4] / 8] & (1 << (table[4] % 8))) << 4) |
+						(!!(set[table[5] / 8] & (1 << (table[5] % 8))) << 5) |
+						(!!(set[table[6] / 8] & (1 << (table[6] % 8))) << 6) |
+						(!!(set[table[7] / 8] & (1 << (table[7] % 8))) << 7);
 
 			table += 8;
 		}
@@ -250,7 +248,7 @@ namespace des::v2
 		}
 	}
 
-	void CryptBlock(const unsigned char* subkeys, unsigned int rounds, unsigned char* block)
+	void CryptBlock(const unsigned char* subkeys, unsigned char* block)
 	{
 		unsigned char temp[8] = { 0 };
 
@@ -317,8 +315,13 @@ namespace des::v2
 			throw Exception{};
 		}
 
-		unsigned char* enc_subkeys = m_subkeys;
-		unsigned char* dec_subkeys = m_subkeys + 96;
+		if (key.size() != k_min_key_size)
+		{
+			throw Exception{};
+		}
+
+		unsigned char* enc_subkeys = m_enc_subkeys;
+		unsigned char* dec_subkeys = m_dec_subkeys + (6 * 15);
 
 		unsigned char temp[7] = { 0 };
 		Permute((const unsigned char*)key.data(), temp, key_perm, 56);
@@ -350,7 +353,7 @@ namespace des::v2
 			Permute(temp, dec_subkeys + 3, right_round_perm, 24);
 
 			enc_subkeys += 6;
-			dec_subkeys += 6;
+			dec_subkeys -= 6;
 		}
 	}
 
@@ -368,7 +371,7 @@ namespace des::v2
 
 		for (size_t i = 0; i < input.size() / k_block_size; i++)
 		{
-			CryptBlock(m_subkeys, m_rounds, (unsigned char*)input.data() + (i * 8));
+			CryptBlock(m_enc_subkeys, (unsigned char*)input.data() + (i * 8));
 		}
 	}
 
@@ -381,7 +384,7 @@ namespace des::v2
 
 		for (size_t i = 0; i < input.size() / k_block_size; i++)
 		{
-			CryptBlock(m_subkeys + 96, m_rounds, (unsigned char*)input.data() + (i * 8));
+			CryptBlock(m_dec_subkeys, (unsigned char*)input.data() + (i * 8));
 		}
 	}
 
@@ -429,7 +432,7 @@ namespace des::v2
 #pragma omp parallel for num_threads(16)
 		for (i = 0; i < input.size() / k_block_size; i++)
 		{
-			CryptBlock(m_subkeys, m_rounds, (unsigned char*)input.data() + (i * 8));
+			CryptBlock(m_enc_subkeys, (unsigned char*)input.data() + (i * 8));
 		}
 	}
 
@@ -445,7 +448,7 @@ namespace des::v2
 #pragma omp parallel for num_threads(16)
 		for (i = 0; i < input.size() / k_block_size; i++)
 		{
-			CryptBlock(m_subkeys + 96, m_rounds, (unsigned char*)input.data() + (i * 8));
+			CryptBlock(m_dec_subkeys, (unsigned char*)input.data() + (i * 8));
 		}
 	}
 
