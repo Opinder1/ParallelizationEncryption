@@ -5,6 +5,7 @@
 #include "MbedTest.h"
 #include "DESv1.h"
 #include "DESv2.h"
+#include "DESv3.h"
 #include "AESv1.h"
 #include "AESv2.h"
 #include "AESv3.h"
@@ -143,6 +144,9 @@ int main()
 	TestCrypt<des::v2::DES>();
 	TestParallelCrypt<des::v2::DESParallel>();
 
+	TestCrypt<des::v3::DES>();
+	TestParallelCrypt<des::v3::DESParallel>();
+
 	TestCrypt<aes::v3::AES>();
 	TestParallelCrypt<aes::v3::AESParallel>();
 
@@ -154,17 +158,29 @@ int main()
 
 	//TestParallelCrypt<opencl::des::DES>();
 
-	TestVersions<aes::v1::AES, aes::v2::AES, aes::v3::AES, cuda::aes::AES, opencl::aes::AES>();
+	TestVersions<des::v1::DES, des::v2::DES, des::v3::DES, cuda::des::DES>();
 
-	TestVersions<des::v1::DES, des::v2::DES, cuda::des::DES>();
+	TestVersions<aes::v1::AES, aes::v2::AES, aes::v3::AES, cuda::aes::AES, opencl::aes::AES>();
 
 	const std::string in(1024 * 1024 * 20, 'A');
 	std::string out;
 
 	{
-		mbed::DESParallel des(BinToStr("1010101010111011000010010001100000100111001101101100110011011101"), 1);
+		des::v1::DESParallel des(BinToStr("10101010101110110000100100011000001001110011011011001100110111"), 1);
 
-		printf("Time DESParallel (mbed): %f\n", TimeFunc(10, TimeEncrypt, des, in, out));
+		printf("Time TripleDESParallel (mbed): %f\n", TimeFunc(1, TimeEncrypt, des, in, out));
+	}
+
+	{
+		des::v2::DESParallel des(BinToStr("10101010101110110000100100011000001001110011011011001100110111"), 1);
+
+		printf("Time TripleDESParallel (mbed): %f\n", TimeFunc(1, TimeEncrypt, des, in, out));
+	}
+
+	{
+		des::v3::DESParallel des(BinToStr("10101010101110110000100100011000001001110011011011001100110111"), 1);
+
+		printf("Time TripleDESParallel (mbed): %f\n", TimeFunc(1, TimeEncrypt, des, in, out));
 	}
 
 	{

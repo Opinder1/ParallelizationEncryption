@@ -36,6 +36,9 @@
     <ClCompile Include="DESv2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DESv3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DESv1.h">
@@ -54,6 +57,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DESv2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DESv3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Triple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

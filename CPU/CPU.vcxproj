@@ -172,6 +172,7 @@
     <ClCompile Include="CPU.cpp" />
     <ClCompile Include="DESv1.cpp" />
     <ClCompile Include="DESv2.cpp" />
+    <ClCompile Include="DESv3.cpp" />
     <ClCompile Include="MbedTest.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -180,7 +181,9 @@
     <ClInclude Include="AESv3.h" />
     <ClInclude Include="DESv1.h" />
     <ClInclude Include="DESv2.h" />
+    <ClInclude Include="DESv3.h" />
     <ClInclude Include="MbedTest.h" />
+    <ClInclude Include="Triple.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

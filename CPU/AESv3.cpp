@@ -1,7 +1,5 @@
 #include "AESv3.h"
 
-#include "../Shared/Shared.h"
-
 namespace aes::v3
 {
 	const unsigned char sbox2d[16][16] = {
