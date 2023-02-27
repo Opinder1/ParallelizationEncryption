@@ -1,54 +1,249 @@
 #include "DESv3.h"
 
+#include "../Shared/Shared.h"
+
+#include <array>
+
+template<size_t S>
+std::array<unsigned char, S> Left1(const unsigned char(&data)[S])
+{
+	std::array<unsigned char, S> array;
+
+	const unsigned char* from_ptr = data + S - 8;
+	unsigned char* to_ptr = array.data();
+
+	for (size_t i = 0; i < S / 8; i++)
+	{
+		to_ptr[0] = from_ptr[0] / 8;
+		to_ptr[1] = from_ptr[1] / 8;
+		to_ptr[2] = from_ptr[2] / 8;
+		to_ptr[3] = from_ptr[3] / 8;
+		to_ptr[4] = from_ptr[4] / 8;
+		to_ptr[5] = from_ptr[5] / 8;
+		to_ptr[6] = from_ptr[6] / 8;
+		to_ptr[7] = from_ptr[7] / 8;
+
+		from_ptr -= 8;
+		to_ptr += 8;
+	}
+
+	return array;
+}
+
+template<size_t S>
+std::array<unsigned char, S> Right1(const unsigned char(&data)[S])
+{
+	std::array<unsigned char, S> array;
+
+	const unsigned char* from_ptr = data + S - 8;
+	unsigned char* to_ptr = array.data();
+
+	for (size_t i = 0; i < S / 8; i++)
+	{
+		to_ptr[0] = 1 << (7 - (from_ptr[0] % 8));
+		to_ptr[1] = 1 << (7 - (from_ptr[1] % 8));
+		to_ptr[2] = 1 << (7 - (from_ptr[2] % 8));
+		to_ptr[3] = 1 << (7 - (from_ptr[3] % 8));
+		to_ptr[4] = 1 << (7 - (from_ptr[4] % 8));
+		to_ptr[5] = 1 << (7 - (from_ptr[5] % 8));
+		to_ptr[6] = 1 << (7 - (from_ptr[6] % 8));
+		to_ptr[7] = 1 << (7 - (from_ptr[7] % 8));
+
+		from_ptr -= 8;
+		to_ptr += 8;
+	}
+
+	return array;
+}
+
+template<size_t S>
+std::array<unsigned char, S> Left2(const unsigned char(&data)[S])
+{
+	std::array<unsigned char, S> array;
+
+	const unsigned char* from_ptr = data + S - 8;
+	unsigned char* to_ptr = array.data();
+
+	for (size_t i = 0; i < S / 8; i++)
+	{
+		to_ptr[0] = from_ptr[7] / 8;
+		to_ptr[1] = from_ptr[6] / 8;
+		to_ptr[2] = from_ptr[5] / 8;
+		to_ptr[3] = from_ptr[4] / 8;
+		to_ptr[4] = from_ptr[3] / 8;
+		to_ptr[5] = from_ptr[2] / 8;
+		to_ptr[6] = from_ptr[1] / 8;
+		to_ptr[7] = from_ptr[0] / 8;
+
+		from_ptr -= 8;
+		to_ptr += 8;
+	}
+
+	return array;
+}
+
+template<size_t S>
+std::array<unsigned char, S> Right2(const unsigned char(&data)[S])
+{
+	std::array<unsigned char, S> array;
+
+	const unsigned char* from_ptr = data + S - 8;
+	unsigned char* to_ptr = array.data();
+
+	for (size_t i = 0; i < S / 8; i++)
+	{
+		to_ptr[0] = 1 << (from_ptr[7] % 8);
+		to_ptr[1] = 1 << (from_ptr[6] % 8);
+		to_ptr[2] = 1 << (from_ptr[5] % 8);
+		to_ptr[3] = 1 << (from_ptr[4] % 8);
+		to_ptr[4] = 1 << (from_ptr[3] % 8);
+		to_ptr[5] = 1 << (from_ptr[2] % 8);
+		to_ptr[6] = 1 << (from_ptr[1] % 8);
+		to_ptr[7] = 1 << (from_ptr[0] % 8);
+
+		from_ptr -= 8;
+		to_ptr += 8;
+	}
+
+	return array;
+}
+
+template<size_t S>
+std::array<unsigned char, S> Left3(const unsigned char(&data)[S])
+{
+	std::array<unsigned char, S> array;
+
+	const unsigned char* from_ptr = data;
+	unsigned char* to_ptr = array.data();
+
+	for (size_t i = 0; i < S / 8; i++)
+	{
+		to_ptr[0] = from_ptr[7] / 8;
+		to_ptr[1] = from_ptr[6] / 8;
+		to_ptr[2] = from_ptr[5] / 8;
+		to_ptr[3] = from_ptr[4] / 8;
+		to_ptr[4] = from_ptr[3] / 8;
+		to_ptr[5] = from_ptr[2] / 8;
+		to_ptr[6] = from_ptr[1] / 8;
+		to_ptr[7] = from_ptr[0] / 8;
+
+		from_ptr += 8;
+		to_ptr += 8;
+	}
+
+	return array;
+}
+
+template<size_t S>
+std::array<unsigned char, S> Right3(const unsigned char(&data)[S])
+{
+	std::array<unsigned char, S> array;
+
+	const unsigned char* from_ptr = data;
+	unsigned char* to_ptr = array.data();
+
+	for (size_t i = 0; i < S / 8; i++)
+	{
+		to_ptr[0] = 1 << (7 - (from_ptr[7] % 8));
+		to_ptr[1] = 1 << (7 - (from_ptr[6] % 8));
+		to_ptr[2] = 1 << (7 - (from_ptr[5] % 8));
+		to_ptr[3] = 1 << (7 - (from_ptr[4] % 8));
+		to_ptr[4] = 1 << (7 - (from_ptr[3] % 8));
+		to_ptr[5] = 1 << (7 - (from_ptr[2] % 8));
+		to_ptr[6] = 1 << (7 - (from_ptr[1] % 8));
+		to_ptr[7] = 1 << (7 - (from_ptr[0] % 8));
+
+		from_ptr += 8;
+		to_ptr += 8;
+	}
+
+	return array;
+}
+
 namespace des::v3
 {
-	unsigned char key_perm_l[56] = {
-		7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0, 3, 2, 1, 0
+	unsigned char key_perm[56] = {
+		56, 48, 40, 32, 24, 16, 8,	0,
+		57, 49, 41, 33, 25, 17, 9,	1,
+		58, 50, 42, 34, 26, 18, 10, 2,
+		59, 51, 43, 35, 62, 54, 46, 38,
+		30, 22, 14, 6,	61, 53, 45, 37,
+		29, 21, 13, 5,	60, 52, 44, 36,
+		28, 20, 12, 4,	27, 19, 11, 3,
 	};
 
-	unsigned char key_perm_r[56] = {
-		1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 4, 4, 4, 4, 4, 4, 4, 4, 8, 8, 8, 8, 64, 64, 64, 64, 64, 64, 64, 64, 32, 32, 32, 32, 32, 32, 32, 32, 16, 16, 16, 16, 16, 16, 16, 16, 8, 8, 8, 8
+	auto key_perm_l = Left1(key_perm);
+	auto key_perm_r = Right1(key_perm);
+
+	unsigned char left_round_perm[24] = {
+		13, 16, 10, 23, 0,	4,
+		2,	27, 14, 5,	20,	9,
+		22, 18, 11, 3,	25, 7,
+		15, 6,	26,	19, 12, 1,
 	};
 
-	unsigned char left_round_perm_l[24] = {
-		1, 2, 1, 2, 0, 0, 0, 3, 1, 0, 2, 1, 2, 2, 1, 0, 3, 0, 1, 0, 3, 2, 1, 0
+	auto left_round_perm_l = Left1(left_round_perm);
+	auto left_round_perm_r = Right1(left_round_perm);
+
+	unsigned char right_round_perm[24] = {
+		40, 51, 30, 36, 46, 54,
+		29, 39, 50, 44, 32, 47,
+		43, 48, 38, 55, 33, 52,
+		45, 41, 49, 35, 28, 31,
 	};
 
-	unsigned char left_round_perm_r[24] = {
-		32, 1, 4, 128, 1, 16, 4, 8, 64, 32, 16, 2, 64, 4, 8, 8, 2, 128, 128, 64, 4, 8, 16, 2
+	auto right_round_perm_l = Left1(right_round_perm);
+	auto right_round_perm_r = Right1(right_round_perm);
+
+	unsigned char initial_perm[64] = {
+		57, 49, 41, 33, 25, 17, 9,	1,
+		59, 51, 43, 35, 27, 19, 11, 3,
+		61, 53, 45, 37, 29, 21, 13, 5,
+		63, 55, 47, 39, 31, 23, 15, 7,
+		56, 48, 40, 32, 24, 16, 8,	0,
+		58, 50, 42, 34, 26, 18, 10, 2,
+		60, 52, 44, 36, 28, 20, 12, 4,
+		62, 54, 46, 38, 30, 22, 14, 6,
 	};
 
-	unsigned char right_round_perm_l[24] = {
-		5, 6, 3, 4, 5, 6, 3, 4, 6, 5, 4, 5, 5, 6, 4, 6, 4, 6, 5, 5, 6, 4, 3, 3
+	auto initial_perm_l = Left2(initial_perm);
+	auto initial_perm_r = Right2(initial_perm);
+
+	unsigned char final_perm[64] = {
+		39, 7,	47,	15,	55, 23, 63, 31,
+		38, 6,	46,	14,	54, 22, 62, 30,
+		37, 5,	45,	13,	53, 21, 61, 29,
+		36, 4,	44,	12,	52, 20, 60, 28,
+		35, 3,	43, 11,	51, 19, 59, 27,
+		34, 2,	42, 10,	50, 18, 58, 26,
+		33, 1,	41, 9,	49, 17, 57, 25,
+		32, 0,	40, 8,	48, 16, 56, 24,
 	};
 
-	unsigned char right_round_perm_r[24] = {
-		1, 8, 64, 16, 64, 64, 32, 128, 4, 16, 1, 128, 8, 1, 64, 128, 2, 16, 32, 2, 2, 8, 16, 128
+	auto final_perm_l = Left2(final_perm);
+	auto final_perm_r = Right2(final_perm);
+
+	unsigned char expansion[48] = {
+		31, 0,	1,	2,	3,	4,	3,	4,
+		5,	6,	7,	8,	7,	8,	9,	10,
+		11, 12, 11, 12, 13, 14, 15, 16,
+		15, 16, 17, 18, 19, 20, 19, 20,
+		21, 22, 23, 24, 23, 24, 25, 26,
+		27, 28, 27, 28, 29, 30, 31, 0,
 	};
 
-	unsigned char initial_perm_l[64] = {
-		7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0
+	auto expansion_l = Left3(expansion);
+	auto expansion_r = Right3(expansion);
+
+	unsigned char pbox[32] = {
+		15, 6,	19, 20, 28, 11, 27, 16,
+		0,	14, 22, 25, 4,	17, 30, 9,
+		1,	7,	23, 13, 31, 26, 2,	8,
+		18, 12, 29, 5,	21,	10, 3,	24,
 	};
 
-	unsigned char initial_perm_r[64] = {
-		2, 2, 2, 2, 2, 2, 2, 2, 8, 8, 8, 8, 8, 8, 8, 8, 32, 32, 32, 32, 32, 32, 32, 32, 128, 128, 128, 128, 128, 128, 128, 128, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 16, 16, 16, 16, 16, 16, 16, 16, 64, 64, 64, 64, 64, 64, 64, 64
-	};
-
-	unsigned char final_perm_l[64] = {
-		4, 0, 5, 1, 6, 2, 7, 3, 4, 0, 5, 1, 6, 2, 7, 3, 4, 0, 5, 1, 6, 2, 7, 3, 4, 0, 5, 1, 6, 2, 7, 3, 4, 0, 5, 1, 6, 2, 7, 3, 4, 0, 5, 1, 6, 2, 7, 3, 4, 0, 5, 1, 6, 2, 7, 3, 4, 0, 5, 1, 6, 2, 7, 3
-	};
-
-	unsigned char final_perm_r[64] = {
-		128, 128, 128, 128, 128, 128, 128, 128, 64, 64, 64, 64, 64, 64, 64, 64, 32, 32, 32, 32, 32, 32, 32, 32, 16, 16, 16, 16, 16, 16, 16, 16, 8, 8, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 4, 4, 4, 4, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1
-	};
-
-	unsigned char expansion_l[48] = {
-		3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0
-	};
-
-	unsigned char expansion_r[48] = {
-		128, 1, 2, 4, 8, 16, 8, 16, 32, 64, 128, 1, 128, 1, 2, 4, 8, 16, 8, 16, 32, 64, 128, 1, 128, 1, 2, 4, 8, 16, 8, 16, 32, 64, 128, 1, 128, 1, 2, 4, 8, 16, 8, 16, 32, 64, 128, 1
-	};
+	auto pbox_l = Left3(pbox);
+	auto pbox_r = Right3(pbox);
 
 	unsigned char sbox[2][4][4][16] = {
 		14,	4,	13,	1,	2,	15,	11,	8,	3,	10,	6,	12,	5,	9,	0,	7,
@@ -92,32 +287,7 @@ namespace des::v3
 		2,	1,	14,	7,	4,	10,	8,	13,	15,	12,	9,	0,	3,	5,	6,	11,
 	};
 
-	unsigned char pbox_l[32] = {
-		1, 0, 2, 2, 3, 1, 3, 2, 0, 1, 2, 3, 0, 2, 3, 1, 0, 0, 2, 1, 3, 3, 0, 1, 2, 1, 3, 0, 2, 1, 0, 3
-	};
-
-	unsigned char pbox_r[32] = {
-		128, 64, 8, 16, 16, 8, 8, 1, 1, 64, 64, 2, 16, 2, 64, 2, 2, 128, 128, 32, 128, 4, 4, 1, 4, 16, 32, 32, 32, 4, 8, 1
-	};
-
-	void Permute(const unsigned char* set, unsigned char* out, const unsigned char* table, size_t table_size)
-	{
-		for (size_t i = 0; i < table_size / 8; i++)
-		{
-			out[i] = (!!(set[table[0] / 8] & (1 << (table[0] % 8))) << 0) |
-				(!!(set[table[1] / 8] & (1 << (table[1] % 8))) << 1) |
-				(!!(set[table[2] / 8] & (1 << (table[2] % 8))) << 2) |
-				(!!(set[table[3] / 8] & (1 << (table[3] % 8))) << 3) |
-				(!!(set[table[4] / 8] & (1 << (table[4] % 8))) << 4) |
-				(!!(set[table[5] / 8] & (1 << (table[5] % 8))) << 5) |
-				(!!(set[table[6] / 8] & (1 << (table[6] % 8))) << 6) |
-				(!!(set[table[7] / 8] & (1 << (table[7] % 8))) << 7);
-
-			table += 8;
-		}
-	}
-
-	void Permute2(const unsigned char* set, unsigned char* out, const unsigned char* table_div, const unsigned char* table_modshift, size_t table_size)
+	void Permute(const unsigned char* set, unsigned char* out, const unsigned char* table_div, const unsigned char* table_modshift, size_t table_size)
 	{
 		for (size_t i = 0; i < table_size / 8; i++)
 		{
@@ -227,13 +397,10 @@ namespace des::v3
 		}
 	}
 
-	bool GetVal(const unsigned char* in, size_t bit)
-	{
-		return (in[bit / 8] & (1 << (bit % 8))) != 0;
-	}
-
 	unsigned char V(unsigned char byte, unsigned char from, unsigned char to)
 	{
+		from = 7 - from;
+
 		if (to == from)
 		{
 			return byte & (1 << from);
@@ -252,55 +419,44 @@ namespace des::v3
 	{
 		for (size_t i = 0; i < 2; i++)
 		{
-			unsigned char input1 = input[(i * 3)];
-			unsigned char input2 = input[(i * 3) + 1];
-			unsigned char input3 = input[(i * 3) + 2];
+			const unsigned char* in = input + (i * 3);
 
-			unsigned char& output1 = output[(i * 2)];
-			unsigned char& output2 = output[(i * 2) + 1];
+			unsigned char* out = output + (i * 2);
 
 			{
-				unsigned char row = V(input1, 0, 1) | V(input1, 5, 0);
-				unsigned char column = V(input1, 1, 3) | V(input1, 2, 2) | V(input1, 3, 1) | V(input1, 4, 0);
+				unsigned char row = V(in[0], 0, 1) | V(in[0], 5, 0);
+				unsigned char column = V(in[0], 1, 3) | V(in[0], 2, 2) | V(in[0], 3, 1) | V(in[0], 4, 0);
 
 				unsigned char val = sbox[i][0][row][column];
 
-				unsigned char nibble = V(val, 3, 0) | V(val, 2, 1) | V(val, 1, 2) | V(val, 0, 3);
-
-				output1 |= nibble;
+				out[0] |= val << 4;
 			}
 
 			{
-				unsigned char row = V(input1, 6, 1) | V(input2, 3, 0);
-				unsigned char column = V(input1, 7, 3) | V(input2, 0, 2) | V(input2, 1, 1) | V(input2, 2, 0);
+				unsigned char row = V(in[0], 6, 1) | V(in[1], 3, 0);
+				unsigned char column = V(in[0], 7, 3) | V(in[1], 0, 2) | V(in[1], 1, 1) | V(in[1], 2, 0);
 
 				unsigned char val = sbox[i][1][row][column];
 
-				unsigned char nibble = V(val, 3, 0) | V(val, 2, 1) | V(val, 1, 2) | V(val, 0, 3);
-
-				output1 |= nibble << 4;
+				out[0] |= val;
 			}
 
 			{
-				unsigned char row = V(input2, 4, 1) | V(input3, 1, 0);
-				unsigned char column = V(input2, 5, 3) | V(input2, 6, 2) | V(input2, 7, 1) | V(input3, 0, 0);
+				unsigned char row = V(in[1], 4, 1) | V(in[2], 1, 0);
+				unsigned char column = V(in[1], 5, 3) | V(in[1], 6, 2) | V(in[1], 7, 1) | V(in[2], 0, 0);
 
 				unsigned char val = sbox[i][2][row][column];
 
-				unsigned char nibble = V(val, 3, 0) | V(val, 2, 1) | V(val, 1, 2) | V(val, 0, 3);
-
-				output2 |= nibble;
+				out[1] |= val << 4;
 			}
 
 			{
-				unsigned char row = V(input3, 2, 1) | V(input3, 7, 0);
-				unsigned char column = V(input3, 3, 3) | V(input3, 4, 2) | V(input3, 5, 1) | V(input3, 6, 0);
+				unsigned char row = V(in[2], 2, 1) | V(in[2], 7, 0);
+				unsigned char column = V(in[2], 3, 3) | V(in[2], 4, 2) | V(in[2], 5, 1) | V(in[2], 6, 0);
 
 				unsigned char val = sbox[i][3][row][column];
 
-				unsigned char nibble = V(val, 3, 0) | V(val, 2, 1) | V(val, 1, 2) | V(val, 0, 3);
-
-				output2 |= nibble << 4;
+				out[1] |= val;
 			}
 		}
 	}
@@ -309,7 +465,7 @@ namespace des::v3
 	{
 		unsigned char temp[8] = { 0 };
 
-		Permute2(block, temp, initial_perm_l, initial_perm_r, 64);
+		Permute(block, temp, initial_perm_l.data(), initial_perm_r.data(), 64);
 
 		unsigned char* left = temp;
 		unsigned char* right = temp + 4;
@@ -319,20 +475,21 @@ namespace des::v3
 			const unsigned char* round_key = subkeys + (key * 6);
 
 			unsigned char temp2[6] = { 0 };
-			unsigned char temp3[4] = { 0 };
 
 			// Mangle
 			{
-				Permute2(right, temp2, expansion_l, expansion_r, 48);
+				Permute(right, temp2, expansion_l.data(), expansion_r.data(), 48);
 
 				for (size_t i = 0; i < 6; i++)
 				{
 					temp2[i] ^= round_key[i];
 				}
 
+				unsigned char temp3[4] = { 0 };
+
 				Compress(temp2, temp3);
 
-				Permute2(temp3, temp2, pbox_l, pbox_r, 32);
+				Permute(temp3, temp2, pbox_l.data(), pbox_r.data(), 32);
 			}
 
 			for (size_t i = 0; i < 4; i++)
@@ -361,7 +518,7 @@ namespace des::v3
 			}
 		}
 
-		Permute2(temp, block, final_perm_l, final_perm_r, 64);
+		Permute(temp, block, final_perm_l.data(), final_perm_r.data(), 64);
 	}
 
 	DES::DES(const std::string& key, size_t group_size) :
@@ -381,7 +538,7 @@ namespace des::v3
 		unsigned char* dec_subkeys = m_dec_subkeys + (6 * 15);
 
 		unsigned char temp[7] = { 0 };
-		Permute2((const unsigned char*)key.data(), temp, key_perm_l, key_perm_r, 56);
+		Permute((const unsigned char*)key.data(), temp, key_perm_l.data(), key_perm_r.data(), 56);
 
 		for (size_t i = 0; i < 16; i++)
 		{
@@ -401,13 +558,13 @@ namespace des::v3
 				break;
 			}
 
-			Permute2(temp, enc_subkeys, left_round_perm_l, left_round_perm_r, 24);
+			Permute(temp, enc_subkeys, left_round_perm_l.data(), left_round_perm_r.data(), 24);
 
-			Permute2(temp, enc_subkeys + 3, right_round_perm_l, right_round_perm_r, 24);
+			Permute(temp, enc_subkeys + 3, right_round_perm_l.data(), right_round_perm_r.data(), 24);
 
-			Permute2(temp, dec_subkeys, left_round_perm_l, left_round_perm_r, 24);
+			Permute(temp, dec_subkeys, left_round_perm_l.data(), left_round_perm_r.data(), 24);
 
-			Permute2(temp, dec_subkeys + 3, right_round_perm_l, right_round_perm_r, 24);
+			Permute(temp, dec_subkeys + 3, right_round_perm_l.data(), right_round_perm_r.data(), 24);
 
 			enc_subkeys += 6;
 			dec_subkeys -= 6;

@@ -170,7 +170,6 @@
     <ClCompile Include="AESv2.cpp" />
     <ClCompile Include="AESv3.cpp" />
     <ClCompile Include="CPU.cpp" />
-    <ClCompile Include="DESv1.cpp" />
     <ClCompile Include="DESv2.cpp" />
     <ClCompile Include="DESv3.cpp" />
     <ClCompile Include="MbedTest.cpp" />
@@ -179,7 +178,6 @@
     <ClInclude Include="AESv1.h" />
     <ClInclude Include="AESv2.h" />
     <ClInclude Include="AESv3.h" />
-    <ClInclude Include="DESv1.h" />
     <ClInclude Include="DESv2.h" />
     <ClInclude Include="DESv3.h" />
     <ClInclude Include="MbedTest.h" />

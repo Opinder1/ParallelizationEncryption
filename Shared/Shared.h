@@ -32,7 +32,7 @@ inline std::string BinToStr(std::string_view input)
 	return output;
 }
 
-inline std::string StrToBin(std::string_view input, size_t bit_count = 0)
+inline std::string StrToBinOld(std::string_view input, size_t bit_count = 0)
 {
 	size_t bits = bit_count ? bit_count : (input.size() * 8);
 
@@ -43,6 +43,35 @@ inline std::string StrToBin(std::string_view input, size_t bit_count = 0)
 		const unsigned char* d = (const unsigned char*)input.data() + (i / 8);
 
 		output[i] = '0' + ((*d >> (i % 8)) & 0x01);
+	}
+
+	return output;
+}
+
+inline std::string StrToBin(std::string_view input, size_t bit_count = 0)
+{
+	size_t bits = bit_count ? bit_count : (input.size() * 8);
+
+	bits = (bits * 9) / 8;
+
+	std::string output(bits, 0);
+
+	size_t bit = 0;
+	size_t i = 0;
+	for (size_t bit = 0; bit < bits; bit++)
+	{
+		if (bit % 9 == 0)
+		{
+			output[bit] = ' ';
+		}
+		else
+		{
+			const unsigned char* d = (const unsigned char*)input.data() + (i / 8);
+
+			output[bit] = '0' + ((*d >> (7 - (i % 8))) & 0x01);
+
+			i++;
+		}
 	}
 
 	return output;
@@ -129,7 +158,7 @@ std::bitset<A> Permute(std::bitset<B> set, unsigned char table[A])
 
 	for (size_t i = 0; i < A; i++)
 	{
-		out.set(i, set.test(table[i]));
+		out.set(i, set.test(B - table[i] - 1));
 	}
 	return out;
 }

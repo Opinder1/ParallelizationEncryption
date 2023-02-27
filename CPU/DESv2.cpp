@@ -1,5 +1,7 @@
 #include "DESv2.h"
 
+#include "../Shared/Shared.h"
+
 namespace des::v2
 {
 	unsigned char key_perm[56] = {
@@ -117,16 +119,54 @@ namespace des::v2
 
 	void Permute(const unsigned char* set, unsigned char* out, const unsigned char* table, size_t table_size)
 	{
+		table += table_size - 8;
+
 		for (size_t i = 0; i < table_size / 8; i++)
 		{
-			out[i] =	(!!(set[table[0] / 8] & (1 << (table[0] % 8))) << 0) |
-						(!!(set[table[1] / 8] & (1 << (table[1] % 8))) << 1) |
-						(!!(set[table[2] / 8] & (1 << (table[2] % 8))) << 2) |
-						(!!(set[table[3] / 8] & (1 << (table[3] % 8))) << 3) |
-						(!!(set[table[4] / 8] & (1 << (table[4] % 8))) << 4) |
-						(!!(set[table[5] / 8] & (1 << (table[5] % 8))) << 5) |
-						(!!(set[table[6] / 8] & (1 << (table[6] % 8))) << 6) |
-						(!!(set[table[7] / 8] & (1 << (table[7] % 8))) << 7);
+			out[i] =	(!!(set[table[0] / 8] & (1 << (7 - (table[0] % 8)))) << 0) |
+						(!!(set[table[1] / 8] & (1 << (7 - (table[1] % 8)))) << 1) |
+						(!!(set[table[2] / 8] & (1 << (7 - (table[2] % 8)))) << 2) |
+						(!!(set[table[3] / 8] & (1 << (7 - (table[3] % 8)))) << 3) |
+						(!!(set[table[4] / 8] & (1 << (7 - (table[4] % 8)))) << 4) |
+						(!!(set[table[5] / 8] & (1 << (7 - (table[5] % 8)))) << 5) |
+						(!!(set[table[6] / 8] & (1 << (7 - (table[6] % 8)))) << 6) |
+						(!!(set[table[7] / 8] & (1 << (7 - (table[7] % 8)))) << 7);
+
+			table -= 8;
+		}
+	}
+
+	void Permute2(const unsigned char* set, unsigned char* out, const unsigned char* table, size_t table_size)
+	{
+		table += table_size - 8;
+
+		for (size_t i = 0; i < table_size / 8; i++)
+		{
+			out[i] = (!!(set[table[0] / 8] & (1 << (table[0] % 8))) << 7) |
+				(!!(set[table[1] / 8] & (1 << (table[1] % 8))) << 6) |
+				(!!(set[table[2] / 8] & (1 << (table[2] % 8))) << 5) |
+				(!!(set[table[3] / 8] & (1 << (table[3] % 8))) << 4) |
+				(!!(set[table[4] / 8] & (1 << (table[4] % 8))) << 3) |
+				(!!(set[table[5] / 8] & (1 << (table[5] % 8))) << 2) |
+				(!!(set[table[6] / 8] & (1 << (table[6] % 8))) << 1) |
+				(!!(set[table[7] / 8] & (1 << (table[7] % 8))) << 0);
+
+			table -= 8;
+		}
+	}
+
+	void Permute3(const unsigned char* set, unsigned char* out, const unsigned char* table, size_t table_size)
+	{
+		for (size_t i = 0; i < table_size / 8; i++)
+		{
+			out[i] = (!!(set[table[0] / 8] & (1 << (7 - (table[0] % 8)))) << 7) |
+				(!!(set[table[1] / 8] & (1 << (7 - (table[1] % 8)))) << 6) |
+				(!!(set[table[2] / 8] & (1 << (7 - (table[2] % 8)))) << 5) |
+				(!!(set[table[3] / 8] & (1 << (7 - (table[3] % 8)))) << 4) |
+				(!!(set[table[4] / 8] & (1 << (7 - (table[4] % 8)))) << 3) |
+				(!!(set[table[5] / 8] & (1 << (7 - (table[5] % 8)))) << 2) |
+				(!!(set[table[6] / 8] & (1 << (7 - (table[6] % 8)))) << 1) |
+				(!!(set[table[7] / 8] & (1 << (7 - (table[7] % 8)))) << 0);
 
 			table += 8;
 		}
@@ -226,7 +266,7 @@ namespace des::v2
 
 	bool GetVal(const unsigned char* in, size_t bit)
 	{
-		return (in[bit / 8] & (1 << (bit % 8))) != 0;
+		return (in[bit / 8] & (1 << (7 - (bit % 8)))) != 0;
 	}
 
 	void Compress(const unsigned char input[6], unsigned char output[4])
@@ -238,11 +278,9 @@ namespace des::v2
 			size_t row = (2 * GetVal(input, pos)) + (1 * GetVal(input, pos + 5));
 			size_t column = (8 * GetVal(input, pos + 1)) + (4 * GetVal(input, pos + 2)) + (2 * GetVal(input, pos + 3)) + (1 * GetVal(input, pos + 4));
 
-			unsigned char val = sbox[i][row][column];
+			unsigned char nibble = sbox[i][row][column];
 
-			unsigned char nibble = GetVal(&val, 3) | (GetVal(&val, 2) * 2) | (GetVal(&val, 1) * 4) | (GetVal(&val, 0) * 8);
-
-			output[i / 2] |= (i % 2 == 0) ? nibble : (nibble << 4);
+			output[i / 2] |= (i % 2 == 0) ? (nibble << 4) : nibble;
 		}
 	}
 
@@ -250,7 +288,7 @@ namespace des::v2
 	{
 		unsigned char temp[8] = { 0 };
 
-		Permute(block, temp, initial_perm, 64);
+		Permute2(block, temp, initial_perm, 64);
 
 		unsigned char* left = temp;
 		unsigned char* right = temp + 4;
@@ -264,7 +302,7 @@ namespace des::v2
 
 			// Mangle
 			{
-				Permute(right, temp2, expansion, 48);
+				Permute3(right, temp2, expansion, 48);
 
 				for (size_t i = 0; i < 6; i++)
 				{
@@ -273,7 +311,7 @@ namespace des::v2
 
 				Compress(temp2, temp3);
 
-				Permute(temp3, temp2, pbox, 32);
+				Permute3(temp3, temp2, pbox, 32);
 			}
 
 			for (size_t i = 0; i < 4; i++)
@@ -302,7 +340,7 @@ namespace des::v2
 			}
 		}
 
-		Permute(temp, block, final_perm, 64);
+		Permute2(temp, block, final_perm, 64);
 	}
 
 	DES::DES(const std::string& key, size_t group_size) :

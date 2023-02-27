@@ -3,7 +3,6 @@
 #include <gtest/gtest.h>
 
 #include "MbedTest.h"
-#include "DESv1.h"
 #include "DESv2.h"
 #include "DESv3.h"
 #include "AESv1.h"
@@ -106,11 +105,11 @@ void TestVersions()
 	{
 		std::string other_enc = alg.Encrypt(input);
 
-		EXPECT_STREQ(main_enc.c_str(), other_enc.c_str());
+		EXPECT_EQ(main_enc, other_enc);
 
 		std::string other_dec = alg.Decrypt(other_enc);
 
-		EXPECT_STREQ(main_dec.c_str(), other_dec.c_str());
+		EXPECT_EQ(main_dec, other_dec);
 	};
 
 	(test(Others(key)), ...);
@@ -124,52 +123,59 @@ void TimeEncrypt(const EncryptBase& des, const std::string& in, std::string out)
 
 int main()
 {
+	/*
+	{
+		des::v2::DES des1(HexToStr("1234567890123456"));
+
+		des::v3::DES des2(HexToStr("1234567890123456"));
+
+		std::string a = des1.Encrypt(HexToStr("A4BC59B2CC2561AD"));
+
+		printf("\n");
+
+		std::string b = des2.Encrypt(HexToStr("A4BC59B2CC2561AD"));
+
+		PrintBinStr("a", a);
+		PrintBinStr("b", b);
+
+		return 0;
+	}
+	*/
+
 	opencl::InitOpenCL();
 
 	//EXPECT_EQ(mbed::DES::Test(), 0);
 	//EXPECT_EQ(mbed::AES::Test(), 0);
 
 	TestCrypt<mbed::DES>();
-	TestParallelCrypt<mbed::DESParallel>();
-
 	TestCrypt<mbed::TripleDES>();
-	TestParallelCrypt<mbed::TripleDESParallel>();
-
 	TestCrypt<mbed::AES>();
-	TestParallelCrypt<mbed::AESParallel>();
-
-	TestCrypt<des::v1::DES>();
-	TestParallelCrypt<des::v1::DESParallel>();
-
 	TestCrypt<des::v2::DES>();
-	TestParallelCrypt<des::v2::DESParallel>();
-
 	TestCrypt<des::v3::DES>();
-	TestParallelCrypt<des::v3::DESParallel>();
-
+	TestCrypt<aes::v1::AES>();
+	TestCrypt<aes::v2::AES>();
 	TestCrypt<aes::v3::AES>();
+
+	TestParallelCrypt<mbed::DESParallel>();
+	TestParallelCrypt<mbed::TripleDESParallel>();
+	TestParallelCrypt<mbed::AESParallel>();
+	TestParallelCrypt<des::v2::DESParallel>();
+	TestParallelCrypt<des::v3::DESParallel>();
+	TestParallelCrypt<aes::v1::AESParallel>();
+	TestParallelCrypt<aes::v2::AESParallel>();
 	TestParallelCrypt<aes::v3::AESParallel>();
 
 	TestParallelCrypt<cuda::aes::AES>();
-
 	TestParallelCrypt<cuda::des::DES>();
-
 	TestParallelCrypt<opencl::aes::AES>();
-
 	//TestParallelCrypt<opencl::des::DES>();
 
-	TestVersions<des::v1::DES, des::v2::DES, des::v3::DES, cuda::des::DES>();
+	TestVersions<des::v2::DES, des::v3::DES, cuda::des::DES>();
 
 	TestVersions<aes::v1::AES, aes::v2::AES, aes::v3::AES, cuda::aes::AES, opencl::aes::AES>();
 
 	const std::string in(1024 * 1024 * 20, 'A');
 	std::string out;
-
-	{
-		des::v1::DESParallel des(BinToStr("10101010101110110000100100011000001001110011011011001100110111"), 1);
-
-		printf("Time TripleDESParallel (mbed): %f\n", TimeFunc(1, TimeEncrypt, des, in, out));
-	}
 
 	{
 		des::v2::DESParallel des(BinToStr("10101010101110110000100100011000001001110011011011001100110111"), 1);
