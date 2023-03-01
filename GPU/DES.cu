@@ -1,7 +1,5 @@
 #include "DES.h"
 
-//#include "../Shared/Shared.h"
-
 #ifdef __CUDA_ARCH__
 #define CONSTANT __constant__
 #define DEVICE __device__
@@ -15,135 +13,183 @@
 
 namespace cuda::des
 {
-	CONSTANT unsigned char key_perm[56] = {
-		56,	48,	40,	32,	24,	16,	8,	0,
-		57,	49,	41,	33,	25,	17,	9,	1,
-		58,	50,	42,	34,	26,	18,	10,	2,
-		59,	51,	43,	35,	62,	54,	46,	38,
-		30,	22,	14,	6,	61,	53,	45,	37,
-		29,	21,	13,	5,	60,	52,	44,	36,
-		28,	20,	12,	4,	27,	19,	11,	3,
+	CONSTANT unsigned char key_perm_l[56] = {
+		3, 2, 1, 0, 3, 2, 1, 0,
+		3, 2, 1, 0, 7, 6, 5, 4,
+		3, 2, 1, 0, 7, 6, 5, 4,
+		7, 6, 5, 4, 7, 6, 5, 4,
+		7, 6, 5, 4, 3, 2, 1, 0,
+		7, 6, 5, 4, 3, 2, 1, 0,
+		7, 6, 5, 4, 3, 2, 1, 0,
 	};
 
-	CONSTANT unsigned char left_round_perm[24] = {
-		13, 16, 10, 23, 0,  4,
-		2,  27, 14, 5,  20, 9,
-		22, 18, 11, 3,  25, 7,
-		15, 6,  26, 19, 12, 1,
+	CONSTANT unsigned char key_perm_r[56] = {
+		8, 8, 8, 8, 16, 16, 16, 16,
+		4, 4, 4, 4, 8, 8, 8, 8,
+		2, 2, 2, 2, 4, 4, 4, 4,
+		16, 16, 16, 16, 2, 2, 2, 2,
+		32, 32, 32, 32, 32, 32, 32, 32,
+		64, 64, 64, 64, 64, 64, 64, 64,
+		128, 128, 128, 128, 128, 128, 128, 128,
 	};
 
-	CONSTANT unsigned char right_round_perm[24] = {
-		40, 51, 30, 36, 46, 54,
-		29, 39, 50, 44, 32, 47,
-		43, 48, 38, 55, 33, 52,
-		45, 41, 49, 35, 28, 31,
+	CONSTANT unsigned char left_round_perm_l[24] = {
+		3, 0, 1, 0, 3, 2, 1, 0,
+		1, 0, 2, 1, 2, 2, 1, 0,
+		1, 2, 1, 2, 0, 0, 0, 3,
 	};
 
-	CONSTANT unsigned char initial_perm[64] = {
-		57,	49,	41,	33,	25,	17,	9,	1,
-		59,	51,	43,	35,	27,	19,	11,	3,
-		61,	53,	45,	37,	29,	21,	13,	5,
-		63,	55,	47,	39,	31,	23,	15,	7,
-		56,	48,	40,	32,	24,	16,	8,	0,
-		58,	50,	42,	34,	26,	18,	10,	2,
-		60,	52,	44,	36,	28,	20,	12,	4,
-		62,	54,	46,	38,	30,	22,	14,	6,
+	CONSTANT unsigned char left_round_perm_r[24] = {
+		64, 1, 1, 2, 32, 16, 8, 64,
+		2, 4, 8, 64, 2, 32, 16, 16,
+		4, 128, 32, 1, 128, 8, 32, 16,
 	};
 
-	CONSTANT unsigned char final_perm[64] = {
-		39,	7,	47,	15,	55,	23,	63,	31,
-		38,	6,	46,	14,	54,	22,	62,	30,
-		37,	5,	45,	13,	53,	21,	61,	29,
-		36,	4,	44,	12,	52,	20,	60,	28,
-		35,	3,	43,	11,	51,	19,	59,	27,
-		34,	2,	42,	10,	50,	18,	58,	26,
-		33,	1,	41,	9,	49,	17,	57,	25,
-		32,	0,	40,	8,	48,	16,	56,	24,
+	CONSTANT unsigned char right_round_perm_l[24] = {
+		4, 6, 5, 5, 6, 4, 3, 3,
+		6, 5, 4, 5, 5, 6, 4, 6,
+		5, 6, 3, 4, 5, 6, 3, 4,
 	};
 
-	CONSTANT unsigned char expansion[48] = {
-		31, 0,	1,	2,	3,	4,
-		3,	4,	5,	6,	7,	8,
-		7,	8,	9,	10,	11,	12,
-		11, 12, 13, 14, 15, 16,
-		15,	16, 17, 18, 19, 20,
-		19,	20, 21, 22, 23, 24,
-		23,	24, 25, 26, 27, 28,
-		27, 28, 29, 30, 31, 0,
+	CONSTANT unsigned char right_round_perm_r[24] = {
+		64, 8, 4, 64, 64, 16, 8, 1,
+		32, 8, 128, 1, 16, 128, 2, 1,
+		128, 16, 2, 8, 2, 2, 4, 1,
 	};
 
-	CONSTANT unsigned char sbox[8][4][16] = {
-	{
+	CONSTANT unsigned char initial_perm_l[64] = {
+		0, 1, 2, 3, 4, 5, 6, 7,
+		0, 1, 2, 3, 4, 5, 6, 7,
+		0, 1, 2, 3, 4, 5, 6, 7,
+		0, 1, 2, 3, 4, 5, 6, 7,
+		0, 1, 2, 3, 4, 5, 6, 7,
+		0, 1, 2, 3, 4, 5, 6, 7,
+		0, 1, 2, 3, 4, 5, 6, 7,
+		0, 1, 2, 3, 4, 5, 6, 7,
+	};
+
+	CONSTANT unsigned char initial_perm_r[64] = {
+		64, 64, 64, 64, 64, 64, 64, 64,
+		16, 16, 16, 16, 16, 16, 16, 16,
+		4, 4, 4, 4, 4, 4, 4, 4,
+		1, 1, 1, 1, 1, 1, 1, 1,
+		128, 128, 128, 128, 128, 128, 128, 128,
+		32, 32, 32, 32, 32, 32, 32, 32,
+		8, 8, 8, 8, 8, 8, 8, 8,
+		2, 2, 2, 2, 2, 2, 2, 2,
+	};
+
+	CONSTANT unsigned char final_perm_l[64] = {
+		3, 7, 2, 6, 1, 5, 0, 4,
+		3, 7, 2, 6, 1, 5, 0, 4,
+		3, 7, 2, 6, 1, 5, 0, 4,
+		3, 7, 2, 6, 1, 5, 0, 4,
+		3, 7, 2, 6, 1, 5, 0, 4,
+		3, 7, 2, 6, 1, 5, 0, 4,
+		3, 7, 2, 6, 1, 5, 0, 4,
+		3, 7, 2, 6, 1, 5, 0, 4,
+	};
+
+	CONSTANT unsigned char final_perm_r[64] = {
+		1, 1, 1, 1, 1, 1, 1, 1,
+		2, 2, 2, 2, 2, 2, 2, 2,
+		4, 4, 4, 4, 4, 4, 4, 4,
+		8, 8, 8, 8, 8, 8, 8, 8,
+		16, 16, 16, 16, 16, 16, 16, 16,
+		32, 32, 32, 32, 32, 32, 32, 32,
+		64, 64, 64, 64, 64, 64, 64, 64,
+		128, 128, 128, 128, 128, 128, 128, 128,
+	};
+
+	CONSTANT unsigned char expansion_l[48] = {
+		0, 0, 0, 0, 0, 0, 0, 3,
+		1, 1, 1, 0, 1, 0, 0, 0,
+		2, 1, 1, 1, 1, 1, 1, 1,
+		2, 2, 2, 2, 2, 2, 2, 1,
+		3, 3, 3, 2, 3, 2, 2, 2,
+		0, 3, 3, 3, 3, 3, 3, 3,
+	};
+
+	CONSTANT unsigned char expansion_r[48] = {
+		8, 16, 8, 16, 32, 64, 128, 1,
+		32, 64, 128, 1, 128, 1, 2, 4,
+		128, 1, 2, 4, 8, 16, 8, 16,
+		8, 16, 8, 16, 32, 64, 128, 1,
+		32, 64, 128, 1, 128, 1, 2, 4,
+		128, 1, 2, 4, 8, 16, 8, 16,
+	};
+
+	CONSTANT unsigned char pbox_l[32] = {
+		2, 3, 1, 3, 2, 2, 0, 1,
+		1, 3, 2, 0, 3, 2, 1, 0,
+		1, 0, 3, 3, 1, 2, 0, 0,
+		3, 0, 1, 2, 0, 3, 1, 2,
+	};
+
+	CONSTANT unsigned char pbox_r[32] = {
+		128, 16, 16, 8, 8, 16, 2, 1,
+		64, 2, 64, 8, 64, 2, 2, 128,
+		128, 32, 32, 1, 4, 1, 1, 64,
+		128, 16, 32, 4, 4, 4, 8, 32,
+	};
+
+	CONSTANT unsigned char sbox[2][4][4][16] = {
 		14,	4,	13,	1,	2,	15,	11,	8,	3,	10,	6,	12,	5,	9,	0,	7,
 		0,	15,	7,	4,	14,	2,	13,	1,	10,	6,	12,	11,	9,	5,	3,	8,
 		4,	1,	14,	8,	13,	6,	2,	11,	15,	12,	9,	7,	3,	10,	5,	0,
 		15,	12,	8,	2,	4,	9,	1,	7,	5,	11,	3,	14,	10,	0,	6,	13,
-	},
-	{
+
 		15,	1,	8,	14,	6,	11,	3,	4,	9,	7,	2,	13,	12,	0,	5,	10,
 		3,	13,	4,	7,	15,	2,	8,	14,	12,	0,	1,	10,	6,	9,	11,	5,
 		0,	14,	7,	11,	10,	4,	13,	1,	5,	8,	12,	6,	9,	3,	2,	15,
 		13,	8,	10,	1,	3,	15,	4,	2,	11,	6,	7,	12,	0,	5,	14,	9,
-	},
-	{
+
 		10,	0,	9,	14,	6,	3,	15,	5,	1,	13,	12,	7,	11,	4,	2,	8,
 		13,	7,	0,	9,	3,	4,	6,	10,	2,	8,	5,	14,	12,	11,	15,	1,
 		13,	6,	4,	9,	8,	15,	3,	0,	11,	1,	2,	12,	5,	10,	14,	7,
 		1,	10,	13,	0,	6,	9,	8,	7,	4,	15,	14,	3,	11,	5,	2,	12,
-	},
-	{
+
 		7,	13,	14,	3,	0,	6,	9,	10,	1,	2,	8,	5,	11,	12,	4,	15,
 		13,	8,	11,	5,	6,	15,	0,	3,	4,	7,	2,	12,	1,	10,	14,	9,
 		10,	6,	9,	0,	12,	11,	7,	13,	15,	1,	3,	14,	5,	2,	8,	4,
 		3,	15,	0,	6,	10,	1,	13,	8,	9,	4,	5,	11,	12,	7,	2,	14,
-	},
-	{
+
 		2,	12,	4,	1,	7,	10,	11,	6,	8,	5,	3,	15,	13,	0,	14,	9,
 		14,	11,	2,	12,	4,	7,	13,	1,	5,	0,	15,	10,	3,	9,	8,	6,
 		4,	2,	1,	11,	10,	13,	7,	8,	15,	9,	12,	5,	6,	3,	0,	14,
 		11,	8,	12,	7,	1,	14,	2,	13,	6,	15,	0,	9,	10,	4,	5,	3,
-	},
-	{
+
 		12,	1,	10,	15,	9,	2,	6,	8,	0,	13,	3,	4,	14,	7,	5,	11,
 		10,	15,	4,	2,	7,	12,	9,	5,	6,	1,	13,	14,	0,	11,	3,	8,
 		9,	14,	15,	5,	2,	8,	12,	3,	7,	0,	4,	10,	1,	13,	11,	6,
 		4,	3,	2,	12,	9,	5,	15,	10,	11,	14,	1,	7,	6,	0,	8,	13,
-	},
-	{
+
 		4,	11,	2,	14,	15,	0,	8,	13,	3,	12,	9,	7,	5,	10,	6,	1,
 		13,	0,	11,	7,	4,	9,	1,	10,	14,	3,	5,	12,	2,	15,	8,	6,
 		1,	4,	11,	13,	12,	3,	7,	14,	10,	15,	6,	8,	0,	5,	9,	2,
 		6,	11,	13,	8,	1,	4,	10,	7,	9,	5,	0,	15,	14,	2,	3,	12,
-	},
-	{
+
 		13,	2,	8,	4,	6,	15,	11,	1,	10,	9,	3,	14,	5,	0,	12,	7,
 		1,	15,	13,	8,	10,	3,	7,	4,	12,	5,	6,	11,	0,	14,	9,	2,
 		7,	11,	4,	1,	9,	12,	14,	2,	0,	6,	10,	13,	15,	3,	5,	8,
 		2,	1,	14,	7,	4,	10,	8,	13,	15,	12,	9,	0,	3,	5,	6,	11,
-	}
 	};
 
-	CONSTANT unsigned char pbox[32] = {
-		15,	6,	19,	20,	28,	11,	27,	16,
-		0,	14,	22,	25,	4,	17,	30,	9,
-		1,	7,	23,	13,	31,	26,	2,	8,
-		18,	12,	29,	5,	21,	10,	3,	24,
-	};
-
-	DEVICE void Permute(const unsigned char* set, unsigned char* out, const unsigned char* table, size_t table_size)
+	DEVICE void Permute(const unsigned char* set, unsigned char* out, const unsigned char* table_div, const unsigned char* table_modshift, size_t table_size)
 	{
 		for (size_t i = 0; i < table_size / 8; i++)
 		{
-			out[i] =	(!!(set[table[0] / 8] & (1 << (table[0] % 8))) << 0) |
-						(!!(set[table[1] / 8] & (1 << (table[1] % 8))) << 1) |
-						(!!(set[table[2] / 8] & (1 << (table[2] % 8))) << 2) |
-						(!!(set[table[3] / 8] & (1 << (table[3] % 8))) << 3) |
-						(!!(set[table[4] / 8] & (1 << (table[4] % 8))) << 4) |
-						(!!(set[table[5] / 8] & (1 << (table[5] % 8))) << 5) |
-						(!!(set[table[6] / 8] & (1 << (table[6] % 8))) << 6) |
-						(!!(set[table[7] / 8] & (1 << (table[7] % 8))) << 7);
+			out[i] = (!!(set[table_div[0]] & table_modshift[0]) << 0) |
+				(!!(set[table_div[1]] & table_modshift[1]) << 1) |
+				(!!(set[table_div[2]] & table_modshift[2]) << 2) |
+				(!!(set[table_div[3]] & table_modshift[3]) << 3) |
+				(!!(set[table_div[4]] & table_modshift[4]) << 4) |
+				(!!(set[table_div[5]] & table_modshift[5]) << 5) |
+				(!!(set[table_div[6]] & table_modshift[6]) << 6) |
+				(!!(set[table_div[7]] & table_modshift[7]) << 7);
 
-			table += 8;
+			table_div += 8;
+			table_modshift += 8;
 		}
 	}
 
@@ -239,42 +285,67 @@ namespace cuda::des
 		}
 	}
 
-	__device__ void BitMemcpy(const unsigned char* in, size_t start_bit, unsigned char* out, size_t bit_length)
+	__forceinline__ __device__ unsigned char V(unsigned char byte, unsigned char from, unsigned char to)
 	{
-		size_t left_bytes = (start_bit + 7) / 8;
+		from = 7 - from;
 
-		size_t right_bytes = start_bit / 8;
-
-		size_t shift = start_bit % 8;
-
-		size_t i;
-		for (i = 0; i < bit_length / 8; i++)
+		if (to == from)
 		{
-			out[i] = in[left_bytes + i] << shift;
-			out[i] |= in[right_bytes + i] >> shift;
+			return byte & (1 << from);
 		}
-		out[i] |= in[right_bytes + i] >> shift;
-	}
-
-	__device__ bool GetVal(const unsigned char* in, size_t bit)
-	{
-		return (in[bit / 8] & (1 << (bit % 8))) != 0;
+		else if (to > from)
+		{
+			return (byte & (1 << from)) << (to - from);
+		}
+		else
+		{
+			return (byte & (1 << from)) >> (from - to);
+		}
 	}
 
 	__device__ void Compress(const unsigned char input[6], unsigned char output[4])
 	{
-		for (size_t i = 0; i < 8; i++)
+		for (size_t i = 0; i < 2; i++)
 		{
-			size_t pos = i * 6;
+			const unsigned char* in = input + (i * 3);
 
-			size_t row = (2 * GetVal(input, pos)) + (1 * GetVal(input, pos + 5));
-			size_t column = (8 * GetVal(input, pos + 1)) + (4 * GetVal(input, pos + 2)) + (2 * GetVal(input, pos + 3)) + (1 * GetVal(input, pos + 4));
+			unsigned char* out = output + (i * 2);
 
-			unsigned char val = sbox[i][row][column];
+			{
+				unsigned char row = V(in[0], 0, 1) | V(in[0], 5, 0);
+				unsigned char column = V(in[0], 1, 3) | V(in[0], 2, 2) | V(in[0], 3, 1) | V(in[0], 4, 0);
 
-			unsigned char nibble = GetVal(&val, 3) | (GetVal(&val, 2) * 2) | (GetVal(&val, 1) * 4) | (GetVal(&val, 0) * 8);
+				unsigned char val = sbox[i][0][row][column];
 
-			output[i / 2] |= (i % 2 == 0) ? nibble : (nibble << 4);
+				out[0] |= val << 4;
+			}
+
+			{
+				unsigned char row = V(in[0], 6, 1) | V(in[1], 3, 0);
+				unsigned char column = V(in[0], 7, 3) | V(in[1], 0, 2) | V(in[1], 1, 1) | V(in[1], 2, 0);
+
+				unsigned char val = sbox[i][1][row][column];
+
+				out[0] |= val;
+			}
+
+			{
+				unsigned char row = V(in[1], 4, 1) | V(in[2], 1, 0);
+				unsigned char column = V(in[1], 5, 3) | V(in[1], 6, 2) | V(in[1], 7, 1) | V(in[2], 0, 0);
+
+				unsigned char val = sbox[i][2][row][column];
+
+				out[1] |= val << 4;
+			}
+
+			{
+				unsigned char row = V(in[2], 2, 1) | V(in[2], 7, 0);
+				unsigned char column = V(in[2], 3, 3) | V(in[2], 4, 2) | V(in[2], 5, 1) | V(in[2], 6, 0);
+
+				unsigned char val = sbox[i][3][row][column];
+
+				out[1] |= val;
+			}
 		}
 	}
 
@@ -284,7 +355,7 @@ namespace cuda::des
 
 		unsigned char temp[8] = { 0 };
 
-		Permute(block, temp, initial_perm, 64);
+		Permute(block, temp, initial_perm_l, initial_perm_r, 64);
 
 		unsigned char* left = temp;
 		unsigned char* right = temp + 4;
@@ -294,20 +365,21 @@ namespace cuda::des
 			const unsigned char* round_key = subkeys + (key * 6);
 
 			unsigned char temp2[6] = { 0 };
-			unsigned char temp3[4] = { 0 };
 
 			// Mangle
 			{
-				Permute(right, temp2, expansion, 48);
+				Permute(right, temp2, expansion_l, expansion_r, 48);
 
 				for (size_t i = 0; i < 6; i++)
 				{
 					temp2[i] ^= round_key[i];
 				}
 
+				unsigned char temp3[4] = { 0 };
+
 				Compress(temp2, temp3);
 
-				Permute(temp3, temp2, pbox, 32);
+				Permute(temp3, temp2, pbox_l, pbox_r, 32);
 			}
 
 			for (size_t i = 0; i < 4; i++)
@@ -336,7 +408,7 @@ namespace cuda::des
 			}
 		}
 
-		Permute(temp, block, final_perm, 64);
+		Permute(temp, block, final_perm_l, final_perm_r, 64);
 	}
 
 	DES::DES(const std::string& key, size_t group_size) :
@@ -370,7 +442,7 @@ namespace cuda::des
 		unsigned char* dec_subkeys = subkeys + (6 * 16) + (6 * 15);
 
 		unsigned char temp[7] = {0};
-		Permute((const unsigned char*)key.data(), temp, key_perm, 56);
+		Permute((const unsigned char*)key.data(), temp, key_perm_l, key_perm_r, 56);
 
 		for (size_t i = 0; i < 16; i++)
 		{
@@ -390,13 +462,13 @@ namespace cuda::des
 				break;
 			}
 
-			Permute(temp, enc_subkeys, left_round_perm, 24);
+			Permute(temp, enc_subkeys, left_round_perm_l, left_round_perm_r, 24);
 
-			Permute(temp, enc_subkeys + 3, right_round_perm, 24);
+			Permute(temp, enc_subkeys + 3, right_round_perm_l, right_round_perm_r, 24);
 
-			Permute(temp, dec_subkeys, left_round_perm, 24);
+			Permute(temp, dec_subkeys, left_round_perm_l, left_round_perm_r, 24);
 
-			Permute(temp, dec_subkeys + 3, right_round_perm, 24);
+			Permute(temp, dec_subkeys + 3, right_round_perm_l, right_round_perm_r, 24);
 
 			enc_subkeys += 6;
 			dec_subkeys -= 6;

@@ -123,25 +123,6 @@ void TimeEncrypt(const EncryptBase& des, const std::string& in, std::string out)
 
 int main()
 {
-	/*
-	{
-		des::v2::DES des1(HexToStr("1234567890123456"));
-
-		des::v3::DES des2(HexToStr("1234567890123456"));
-
-		std::string a = des1.Encrypt(HexToStr("A4BC59B2CC2561AD"));
-
-		printf("\n");
-
-		std::string b = des2.Encrypt(HexToStr("A4BC59B2CC2561AD"));
-
-		PrintBinStr("a", a);
-		PrintBinStr("b", b);
-
-		return 0;
-	}
-	*/
-
 	opencl::InitOpenCL();
 
 	//EXPECT_EQ(mbed::DES::Test(), 0);
@@ -222,13 +203,13 @@ int main()
 	{
 		cuda::aes::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
 
-		printf("Time AESParallel (cuda): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
+		printf("Time AESParallel (cuda): %f\n", TimeFunc(100, TimeEncrypt, aes, in, out));
 	}
 
 	{
 		opencl::aes::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
 
-		printf("Time AESParallel (opencl): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
+		printf("Time AESParallel (opencl): %f\n", TimeFunc(100, TimeEncrypt, aes, in, out));
 	}
 
 	opencl::ShutdownOpenCL();
