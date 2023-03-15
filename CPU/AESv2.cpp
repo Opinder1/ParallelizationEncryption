@@ -430,38 +430,30 @@ namespace aes::v2
 		AddRoundKey(block, 0);
 	}
 
-	std::string AES::Encrypt(const std::string& input) const
+	void AES::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
 			throw Exception{};
 		}
 
-		std::string output = input;
-
 		for (size_t i = 0; i < input.size(); i += 16)
 		{
-			EncryptBlock((unsigned char*)output.data() + i);
+			EncryptBlock((unsigned char*)input.data() + i);
 		}
-
-		return output;
 	}
 
-	std::string AES::Decrypt(const std::string& input) const
+	void AES::DecryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
 			throw Exception{};
 		}
 
-		std::string output = input;
-
 		for (size_t i = 0; i < input.size(); i += 16)
 		{
-			DecryptBlock((unsigned char*)output.data() + i);
+			DecryptBlock((unsigned char*)input.data() + i);
 		}
-
-		return output;
 	}
 
 	AESParallel::AESParallel(const std::string& key, size_t group_size) :
@@ -473,41 +465,33 @@ namespace aes::v2
 		}
 	}
 
-	std::string AESParallel::Encrypt(const std::string& input) const
+	void AESParallel::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
 			throw Exception{};
 		}
 
-		std::string output = input;
-
 		int i;
 #pragma omp parallel for num_threads(16)
 		for (i = 0; i < input.size(); i += 16)
 		{
-			EncryptBlock((unsigned char*)output.data() + i);
+			EncryptBlock((unsigned char*)input.data() + i);
 		}
-
-		return output;
 	}
 
-	std::string AESParallel::Decrypt(const std::string& input) const
+	void AESParallel::DecryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
 			throw Exception{};
 		}
 
-		std::string output = input;
-
 		int i;
 #pragma omp parallel for num_threads(16)
 		for (i = 0; i < input.size(); i += 16)
 		{
-			DecryptBlock((unsigned char*)output.data() + i);
+			DecryptBlock((unsigned char*)input.data() + i);
 		}
-
-		return output;
 	}
 }

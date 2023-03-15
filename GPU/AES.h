@@ -30,13 +30,9 @@ namespace cuda::aes
 
 		GPU_API ~AES();
 
-		GPU_API void EncryptInPlace(std::string& input) const;
+		GPU_API void EncryptInPlace(std::string& input) const override;
 
-		GPU_API void DecryptInPlace(std::string& input) const;
-
-		GPU_API std::string Encrypt(const std::string& input) const override;
-
-		GPU_API std::string Decrypt(const std::string& input) const override;
+		GPU_API void DecryptInPlace(std::string& input) const override;
 
 	private:
 		unsigned int m_rounds;

@@ -49,7 +49,7 @@ namespace mbed
 		return mbedtls_des_self_test(1);
 	}
 
-	std::string DES::Encrypt(const std::string& input) const
+	void DES::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
@@ -66,10 +66,10 @@ namespace mbed
 			}
 		}
 
-		return output;
+		input = output;
 	}
 
-	std::string DES::Decrypt(const std::string& input) const
+	void DES::DecryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
@@ -86,7 +86,7 @@ namespace mbed
 			}
 		}
 
-		return output;
+		input = output;
 	}
 
 	DESParallel::DESParallel(const std::string& key, size_t group_size) :
@@ -103,7 +103,7 @@ namespace mbed
 		}
 	}
 
-	std::string DESParallel::Encrypt(const std::string& input) const
+	void DESParallel::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
@@ -123,10 +123,10 @@ namespace mbed
 			}
 		}
 
-		return output;
+		input = output;
 	}
 
-	std::string DESParallel::Decrypt(const std::string& input) const
+	void DESParallel::DecryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
@@ -146,7 +146,7 @@ namespace mbed
 			}
 		}
 
-		return output;
+		input = output;
 	}
 
 	TripleDES::TripleDES(const std::string& key) :
@@ -177,7 +177,7 @@ namespace mbed
 		mbedtls_des3_free(&m_dec_ctx);
 	}
 
-	std::string TripleDES::Encrypt(const std::string& input) const
+	void TripleDES::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
@@ -194,10 +194,10 @@ namespace mbed
 			}
 		}
 
-		return output;
+		input = output;
 	}
 
-	std::string TripleDES::Decrypt(const std::string& input) const
+	void TripleDES::DecryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
@@ -214,7 +214,7 @@ namespace mbed
 			}
 		}
 
-		return output;
+		input = output;
 	}
 
 	TripleDESParallel::TripleDESParallel(const std::string& key, size_t group_size) :
@@ -231,7 +231,7 @@ namespace mbed
 		}
 	}
 
-	std::string TripleDESParallel::Encrypt(const std::string& input) const
+	void TripleDESParallel::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
@@ -251,10 +251,10 @@ namespace mbed
 			}
 		}
 
-		return output;
+		input = output;
 	}
 
-	std::string TripleDESParallel::Decrypt(const std::string& input) const
+	void TripleDESParallel::DecryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
@@ -274,7 +274,7 @@ namespace mbed
 			}
 		}
 
-		return output;
+		input = output;
 	}
 
 	AES::AES(const std::string& key) :
@@ -322,7 +322,7 @@ namespace mbed
 		return mbedtls_aes_self_test(1);
 	}
 
-	std::string AES::Encrypt(const std::string& input) const
+	void AES::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
@@ -340,10 +340,10 @@ namespace mbed
 			throw Exception{};
 		}
 
-		return output;
+		input = output;
 	}
 
-	std::string AES::Decrypt(const std::string& input) const
+	void AES::DecryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
@@ -361,7 +361,7 @@ namespace mbed
 			throw Exception{};
 		}
 
-		return output;
+		input = output;
 	}
 
 	AESParallel::AESParallel(const std::string& key, size_t group_size) :
@@ -374,7 +374,7 @@ namespace mbed
 		}
 	}
 
-	std::string AESParallel::Encrypt(const std::string& input) const
+	void AESParallel::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
@@ -402,10 +402,10 @@ namespace mbed
 			}
 		}
 
-		return output;
+		input = output;
 	}
 
-	std::string AESParallel::Decrypt(const std::string& input) const
+	void AESParallel::DecryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % 16 != 0)
 		{
@@ -433,6 +433,6 @@ namespace mbed
 			}
 		}
 
-		return output;
+		input = output;
 	}
 }

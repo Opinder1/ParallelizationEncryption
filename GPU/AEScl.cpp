@@ -163,22 +163,4 @@ namespace opencl::aes
 
 		m_program.RunFunction(m_dec_id, num);
 	}
-
-	std::string AES::Encrypt(const std::string& input) const
-	{
-		std::string output = input;
-
-		EncryptInPlace(output);
-
-		return output;
-	}
-
-	std::string AES::Decrypt(const std::string& input) const
-	{
-		std::string output = input;
-
-		DecryptInPlace(output);
-
-		return output;
-	}
 }

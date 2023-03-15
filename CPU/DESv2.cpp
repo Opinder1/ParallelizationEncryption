@@ -424,24 +424,6 @@ namespace des::v2
 		}
 	}
 
-	std::string DES::Encrypt(const std::string& input) const
-	{
-		std::string output = input;
-
-		EncryptInPlace(output);
-
-		return output;
-	}
-
-	std::string DES::Decrypt(const std::string& input) const
-	{
-		std::string output = input;
-
-		DecryptInPlace(output);
-
-		return output;
-	}
-
 	DESParallel::DESParallel(const std::string& key, size_t group_size) :
 		DES(key)
 	{
@@ -486,23 +468,5 @@ namespace des::v2
 		{
 			CryptBlock(m_dec_subkeys, (unsigned char*)input.data() + (i * 8));
 		}
-	}
-
-	std::string DESParallel::Encrypt(const std::string& input) const
-	{
-		std::string output = input;
-
-		EncryptInPlace(output);
-
-		return output;
-	}
-
-	std::string DESParallel::Decrypt(const std::string& input) const
-	{
-		std::string output = input;
-
-		DecryptInPlace(output);
-
-		return output;
 	}
 }

@@ -11,6 +11,9 @@
 #include "../GPU/AES.h"
 #include "../GPU/AEScl.h"
 #include "../GPU/DES.h"
+#include "../GPU/DEScl.h"
+
+#include "Triple.h"
 
 void TestEncrypt(const EncryptBase& base, size_t block_size)
 {
@@ -103,6 +106,7 @@ void TestVersions()
 
 	auto test = [&main_enc, &main_dec, &input](const EncryptBase& alg)
 	{
+		printf("%s\n", typeid(alg).name());
 		std::string other_enc = alg.Encrypt(input);
 
 		EXPECT_EQ(main_enc, other_enc);
@@ -115,18 +119,27 @@ void TestVersions()
 	(test(Others(key)), ...);
 }
 
-void TimeEncrypt(const EncryptBase& des, const std::string& in, std::string out)
+template<class F, class... Args>
+inline float TimeFunc(size_t num, const F& function, Args&... args)
 {
-	out = des.Encrypt(in);
-	out = des.Decrypt(out);
+	auto t1 = std::chrono::steady_clock::now();
+
+	for (size_t i = 0; i < num; i++)
+	{
+		function(args...);
+	}
+
+	auto t2 = std::chrono::steady_clock::now();
+
+	auto time_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
+	auto time_sec = time_nano.count() / 1000000000.0f;
+
+	return time_sec;
 }
 
 int main()
 {
 	opencl::InitOpenCL();
-
-	//EXPECT_EQ(mbed::DES::Test(), 0);
-	//EXPECT_EQ(mbed::AES::Test(), 0);
 
 	TestCrypt<mbed::DES>();
 	TestCrypt<mbed::TripleDES>();
@@ -149,67 +162,67 @@ int main()
 	TestParallelCrypt<cuda::aes::AES>();
 	TestParallelCrypt<cuda::des::DES>();
 	TestParallelCrypt<opencl::aes::AES>();
-	//TestParallelCrypt<opencl::des::DES>();
+	TestParallelCrypt<opencl::des::DES>();
 
-	TestVersions<des::v2::DES, des::v3::DES, cuda::des::DES>();
+	TestVersions<des::v2::DES, des::v2::DESParallel, des::v3::DES, des::v3::DESParallel, cuda::des::DES, opencl::des::DES>();
+	TestVersions<des::v3::TripleDES, des::v3::TripleDESParallel, cuda::des::TripleDES, opencl::des::TripleDES>();
 
 	TestVersions<aes::v1::AES, aes::v2::AES, aes::v3::AES, cuda::aes::AES, opencl::aes::AES>();
 
-	const std::string in(1024 * 1024 * 20, 'A');
+	const std::string in(1024 * 1024 * 200, 'A');
 	std::string out;
 
-	{
-		des::v2::DESParallel des(BinToStr("10101010101110110000100100011000001001110011011011001100110111"), 1);
-
-		printf("Time TripleDESParallel (mbed): %f\n", TimeFunc(1, TimeEncrypt, des, in, out));
-	}
-
-	{
-		des::v3::DESParallel des(BinToStr("10101010101110110000100100011000001001110011011011001100110111"), 1);
-
-		printf("Time TripleDESParallel (mbed): %f\n", TimeFunc(1, TimeEncrypt, des, in, out));
-	}
+	auto TimeEncrypt = [&in, &out](const EncryptBase& alg) {
+		out = alg.Encrypt(in);
+		out = alg.Decrypt(out);
+	};
 
 	{
 		mbed::TripleDESParallel des(BinToStr("101010101011101100001001000110000010011100110110110011001101110110101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"), 1);
 
-		printf("Time TripleDESParallel (mbed): %f\n", TimeFunc(10, TimeEncrypt, des, in, out));
+		printf("Time TripleDESParallel (mbed): %f\n", TimeFunc(1, TimeEncrypt, des));
+	}
+
+	{
+		des::v3::TripleDESParallel des(BinToStr("101010101011101100001001000110000010011100110110110011001101110110101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"), 1);
+
+		printf("Time TripleDESParallel (v3): %f\n", TimeFunc(1, TimeEncrypt, des));
+	}
+
+	{
+		cuda::des::TripleDES aes(BinToStr("101010101011101100001001000110000010011100110110110011001101110110101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
+
+		printf("Time DESParallel (cuda): %f\n", TimeFunc(1, TimeEncrypt, aes));
+	}
+
+	{
+		opencl::des::TripleDES aes(BinToStr("101010101011101100001001000110000010011100110110110011001101110110101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
+
+		printf("Time DESParallel (opencl): %f\n", TimeFunc(1, TimeEncrypt, aes));
 	}
 
 	{
 		mbed::AESParallel aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
 
-		printf("Time AESParallel (mbed): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
-	}
-
-	{
-		aes::v1::AESParallel aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-
-		printf("Time AESParallel (v1): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
-	}
-
-	{
-		aes::v2::AESParallel aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-
-		printf("Time AESParallel (v2): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
+		printf("Time AESParallel (mbed): %f\n", TimeFunc(1, TimeEncrypt, aes));
 	}
 
 	{
 		aes::v3::AESParallel aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
 
-		printf("Time AESParallel (v3): %f\n", TimeFunc(10, TimeEncrypt, aes, in, out));
+		printf("Time AESParallel (v3): %f\n", TimeFunc(1, TimeEncrypt, aes));
 	}
 
 	{
 		cuda::aes::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
 
-		printf("Time AESParallel (cuda): %f\n", TimeFunc(100, TimeEncrypt, aes, in, out));
+		printf("Time AESParallel (cuda): %f\n", TimeFunc(1, TimeEncrypt, aes));
 	}
 
 	{
 		opencl::aes::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
 
-		printf("Time AESParallel (opencl): %f\n", TimeFunc(100, TimeEncrypt, aes, in, out));
+		printf("Time AESParallel (opencl): %f\n", TimeFunc(1, TimeEncrypt, aes));
 	}
 
 	opencl::ShutdownOpenCL();

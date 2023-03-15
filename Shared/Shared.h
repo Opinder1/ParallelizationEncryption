@@ -217,24 +217,6 @@ void PrintBin(const char* msg, const T* ptr, size_t bit_count = 0)
 	printf("%s: %s\n", msg, StrToBin(input, bit_count).c_str());
 }
 
-template<class F, class... Args>
-inline float TimeFunc(size_t num, const F& function, Args&... args)
-{
-	auto t1 = std::chrono::steady_clock::now();
-
-	for (size_t i = 0; i < num; i++)
-	{
-		function(args...);
-	}
-
-	auto t2 = std::chrono::steady_clock::now();
-
-	auto time_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
-	auto time_sec = time_nano.count() / 1000000000.0f;
-
-	return time_sec;
-}
-
 inline size_t CeilSize(size_t val, size_t size)
 {
 	return (((val - 1) / size) + 1) * size;

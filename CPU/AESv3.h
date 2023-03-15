@@ -24,9 +24,9 @@ namespace aes::v3
 
 		~AES();
 
-		std::string Encrypt(const std::string& input) const override;
+		void EncryptInPlace(std::string& input) const override;
 
-		std::string Decrypt(const std::string& input) const override;
+		void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		void EncryptBlock(unsigned char block[16]) const;
@@ -45,8 +45,8 @@ namespace aes::v3
 	public:
 		AESParallel(const std::string& key, size_t group_size = 1);
 
-		std::string Encrypt(const std::string& input) const override;
+		void EncryptInPlace(std::string& input) const override;
 
-		std::string Decrypt(const std::string& input) const override;
+		void DecryptInPlace(std::string& input) const override;
 	};
 }

@@ -349,10 +349,8 @@ namespace cuda::des
 		}
 	}
 
-	__global__ void CryptBlock(const unsigned char* subkeys, unsigned int rounds, unsigned char* block)
+	__device__ void CryptBlock(const unsigned char* subkeys, unsigned int rounds, unsigned char* block)
 	{
-		block += (threadIdx.x * 8);
-
 		unsigned char temp[8] = { 0 };
 
 		Permute(block, temp, initial_perm_l, initial_perm_r, 64);
@@ -411,6 +409,22 @@ namespace cuda::des
 		Permute(temp, block, final_perm_l, final_perm_r, 64);
 	}
 
+	__global__ void CryptBlocks(const unsigned char* subkeys, unsigned int rounds, unsigned char* block)
+	{
+		block += (threadIdx.x * 8);
+
+		CryptBlock(subkeys + (96 * 0), rounds, block);
+	}
+
+	__global__ void TripleCryptBlocks(const unsigned char* subkeys, unsigned int rounds, unsigned char* block)
+	{
+		block += (threadIdx.x * 8);
+
+		CryptBlock(subkeys + (96 * 0), rounds, block);
+		CryptBlock(subkeys + (96 * 1), rounds, block);
+		CryptBlock(subkeys + (96 * 2), rounds, block);
+	}
+
 	DES::DES(const std::string& key, size_t group_size) :
 		EncryptBase(key)
 	{
@@ -430,7 +444,7 @@ namespace cuda::des
 			throw Exception{};
 		}
 
-		if (cudaMalloc(&m_subkeys, 240) != cudaSuccess)
+		if (cudaMalloc(&m_subkeys, 192) != cudaSuccess)
 		{
 			fprintf(stderr, "cudaMalloc failed!");
 			throw Exception{};
@@ -474,7 +488,7 @@ namespace cuda::des
 			dec_subkeys -= 6;
 		}
 
-		if (cudaMemcpy(m_subkeys, subkeys, 240, cudaMemcpyHostToDevice) != cudaSuccess)
+		if (cudaMemcpy(m_subkeys, subkeys, 192, cudaMemcpyHostToDevice) != cudaSuccess)
 		{
 			fprintf(stderr, "cudaMemcpy failed!");
 			throw Exception{};
@@ -508,7 +522,7 @@ namespace cuda::des
 		}
 
 		unsigned int num = (unsigned int)input.size() / k_block_size;
-		CryptBlock<<<1, num>>>(m_subkeys, m_rounds, mem);
+		CryptBlocks<<<1, num>>>(m_subkeys, m_rounds, mem);
 
 		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
 		{
@@ -545,7 +559,7 @@ namespace cuda::des
 		}
 
 		unsigned int num = (unsigned int)input.size() / k_block_size;
-		CryptBlock<<<1, num>>>(m_subkeys + 96, m_rounds, mem);
+		CryptBlocks<<<1, num>>>(m_subkeys + 96, m_rounds, mem);
 
 		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
 		{
@@ -560,21 +574,158 @@ namespace cuda::des
 		}
 	}
 
-	std::string DES::Encrypt(const std::string& input) const
+	TripleDES::TripleDES(const std::string& key, size_t group_size) :
+		EncryptBase(key)
 	{
-		std::string output = input;
+		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
+		{
+			throw Exception{};
+		}
 
-		EncryptInPlace(output);
+		if (key.size() != k_min_key_size)
+		{
+			throw Exception{};
+		}
 
-		return output;
+		if (cudaSetDevice(0) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
+			throw Exception{};
+		}
+
+		if (cudaMalloc(&m_subkeys, 6 * 96) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaMalloc failed!");
+			throw Exception{};
+		}
+
+		unsigned char subkeys[6][96] = { 0 };
+
+		const unsigned char enc_pos[3] = { 0, 4, 2 };
+		const unsigned char dec_pos[3] = { 3, 1, 5 };
+
+		for (size_t k = 0; k < 3; k++)
+		{
+			unsigned char* enc_subkeys = subkeys[enc_pos[k]];
+			unsigned char* dec_subkeys = subkeys[dec_pos[k]] + (6 * 15);
+
+			unsigned char temp[7] = { 0 };
+			Permute((const unsigned char*)key.data() + (k * 8), temp, key_perm_l, key_perm_r, 56);
+
+			for (size_t i = 0; i < 16; i++)
+			{
+				switch (i)
+				{
+				case 0:
+				case 1:
+				case 8:
+				case 15:
+					RotateLeft1Bit(temp, 0, 28);
+					RotateLeft1Bit(temp, 28, 28);
+					break;
+
+				default:
+					RotateLeft2Bit(temp, 0, 28);
+					RotateLeft2Bit(temp, 28, 28);
+					break;
+				}
+
+				Permute(temp, enc_subkeys, left_round_perm_l, left_round_perm_r, 24);
+
+				Permute(temp, enc_subkeys + 3, right_round_perm_l, right_round_perm_r, 24);
+
+				Permute(temp, dec_subkeys, left_round_perm_l, left_round_perm_r, 24);
+
+				Permute(temp, dec_subkeys + 3, right_round_perm_l, right_round_perm_r, 24);
+
+				enc_subkeys += 6;
+				dec_subkeys -= 6;
+			}
+		}
+
+		if (cudaMemcpy(m_subkeys, subkeys, 6 * 96, cudaMemcpyHostToDevice) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaMemcpy failed!");
+			throw Exception{};
+		}
 	}
 
-	std::string DES::Decrypt(const std::string& input) const
+	TripleDES::~TripleDES()
 	{
-		std::string output = input;
+		cudaFree(m_subkeys);
+	}
 
-		DecryptInPlace(output);
+	void TripleDES::EncryptInPlace(std::string& input) const
+	{
+		if (input.size() == 0 || input.size() % k_block_size != 0)
+		{
+			throw Exception{};
+		}
 
-		return output;
+		unsigned char* mem = 0;
+
+		if (cudaMalloc(&mem, input.size()) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaMalloc failed!");
+			throw Exception{};
+		}
+
+		if (cudaMemcpy(mem, input.data(), input.size(), cudaMemcpyHostToDevice) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaMemcpy failed!");
+			throw Exception{};
+		}
+
+		unsigned int num = (unsigned int)input.size() / k_block_size;
+		TripleCryptBlocks<<<1, num>>>(m_subkeys, m_rounds, mem);
+
+		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaMemcpy failed!");
+			throw Exception{};
+		}
+
+		if (cudaFree(mem) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaFree failed!");
+			throw Exception{};
+		}
+	}
+
+	void TripleDES::DecryptInPlace(std::string& input) const
+	{
+		if (input.size() == 0 || input.size() % k_block_size != 0)
+		{
+			throw Exception{};
+		}
+
+		unsigned char* mem = 0;
+
+		if (cudaMalloc(&mem, input.size()) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaMalloc failed!");
+			throw Exception{};
+		}
+
+		if (cudaMemcpy(mem, input.data(), input.size(), cudaMemcpyHostToDevice) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaMemcpy failed!");
+			throw Exception{};
+		}
+
+		unsigned int num = (unsigned int)input.size() / k_block_size;
+		TripleCryptBlocks<<<1, num>>>(m_subkeys + (96 * 3), m_rounds, mem);
+
+		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaMemcpy failed!");
+			throw Exception{};
+		}
+
+		if (cudaFree(mem) != cudaSuccess)
+		{
+			fprintf(stderr, "cudaFree failed!");
+			throw Exception{};
+		}
 	}
 }

@@ -571,11 +571,6 @@ namespace des::v3
 		}
 	}
 
-	DES::~DES()
-	{
-
-	}
-
 	void DES::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
@@ -602,36 +597,10 @@ namespace des::v3
 		}
 	}
 
-	std::string DES::Encrypt(const std::string& input) const
-	{
-		std::string output = input;
-
-		EncryptInPlace(output);
-
-		return output;
-	}
-
-	std::string DES::Decrypt(const std::string& input) const
-	{
-		std::string output = input;
-
-		DecryptInPlace(output);
-
-		return output;
-	}
-
 	DESParallel::DESParallel(const std::string& key, size_t group_size) :
-		DES(key)
+		DES(key, group_size)
 	{
-		if (key.size() != k_min_key_size)
-		{
-			throw Exception{};
-		}
 
-		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
-		{
-			throw Exception{};
-		}
 	}
 
 	void DESParallel::EncryptInPlace(std::string& input) const
@@ -666,21 +635,128 @@ namespace des::v3
 		}
 	}
 
-	std::string DESParallel::Encrypt(const std::string& input) const
+	TripleDES::TripleDES(const std::string& key, size_t group_size) :
+		EncryptBase(key)
 	{
-		std::string output = input;
+		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
+		{
+			throw Exception{};
+		}
 
-		EncryptInPlace(output);
+		if (key.size() != k_min_key_size)
+		{
+			throw Exception{};
+		}
 
-		return output;
+		for (size_t k = 0; k < 3; k++)
+		{
+			unsigned char* enc_subkeys = m_enc_subkeys[k];
+			unsigned char* dec_subkeys = m_dec_subkeys[k] + (6 * 15);
+
+			unsigned char temp[7] = { 0 };
+			Permute((const unsigned char*)key.data() + (k * 8), temp, key_perm_l.data(), key_perm_r.data(), 56);
+
+			for (size_t i = 0; i < 16; i++)
+			{
+				switch (i)
+				{
+				case 0:
+				case 1:
+				case 8:
+				case 15:
+					RotateLeft1Bit(temp, 0, 28);
+					RotateLeft1Bit(temp, 28, 28);
+					break;
+
+				default:
+					RotateLeft2Bit(temp, 0, 28);
+					RotateLeft2Bit(temp, 28, 28);
+					break;
+				}
+
+				Permute(temp, enc_subkeys, left_round_perm_l.data(), left_round_perm_r.data(), 24);
+
+				Permute(temp, enc_subkeys + 3, right_round_perm_l.data(), right_round_perm_r.data(), 24);
+
+				Permute(temp, dec_subkeys, left_round_perm_l.data(), left_round_perm_r.data(), 24);
+
+				Permute(temp, dec_subkeys + 3, right_round_perm_l.data(), right_round_perm_r.data(), 24);
+
+				enc_subkeys += 6;
+				dec_subkeys -= 6;
+			}
+		}
 	}
 
-	std::string DESParallel::Decrypt(const std::string& input) const
+	void TripleDES::EncryptInPlace(std::string& input) const
 	{
-		std::string output = input;
+		if (input.size() == 0 || input.size() % k_block_size != 0)
+		{
+			throw Exception{};
+		}
 
-		DecryptInPlace(output);
+		for (size_t i = 0; i < input.size() / k_block_size; i++)
+		{
+			CryptBlock(m_enc_subkeys[0], (unsigned char*)input.data() + (i * 8));
+			CryptBlock(m_dec_subkeys[1], (unsigned char*)input.data() + (i * 8));
+			CryptBlock(m_enc_subkeys[2], (unsigned char*)input.data() + (i * 8));
+		}
+	}
 
-		return output;
+	void TripleDES::DecryptInPlace(std::string& input) const
+	{
+		if (input.size() == 0 || input.size() % k_block_size != 0)
+		{
+			throw Exception{};
+		}
+
+		for (size_t i = 0; i < input.size() / k_block_size; i++)
+		{
+			CryptBlock(m_dec_subkeys[0], (unsigned char*)input.data() + (i * 8));
+			CryptBlock(m_enc_subkeys[1], (unsigned char*)input.data() + (i * 8));
+			CryptBlock(m_dec_subkeys[2], (unsigned char*)input.data() + (i * 8));
+		}
+	}
+
+	TripleDESParallel::TripleDESParallel(const std::string& key, size_t group_size) :
+		TripleDES(key, group_size)
+	{
+
+	}
+
+	void TripleDESParallel::EncryptInPlace(std::string& input) const
+	{
+		if (input.size() == 0 || input.size() % k_block_size != 0)
+		{
+			throw Exception{};
+		}
+
+		int i;
+
+#pragma omp parallel for num_threads(16)
+		for (i = 0; i < input.size() / k_block_size; i++)
+		{
+			CryptBlock(m_enc_subkeys[0], (unsigned char*)input.data() + (i * 8));
+			CryptBlock(m_dec_subkeys[1], (unsigned char*)input.data() + (i * 8));
+			CryptBlock(m_enc_subkeys[2], (unsigned char*)input.data() + (i * 8));
+		}
+	}
+
+	void TripleDESParallel::DecryptInPlace(std::string& input) const
+	{
+		if (input.size() == 0 || input.size() % k_block_size != 0)
+		{
+			throw Exception{};
+		}
+
+		int i;
+
+#pragma omp parallel for num_threads(16)
+		for (i = 0; i < input.size() / k_block_size; i++)
+		{
+			CryptBlock(m_dec_subkeys[0], (unsigned char*)input.data() + (i * 8));
+			CryptBlock(m_enc_subkeys[1], (unsigned char*)input.data() + (i * 8));
+			CryptBlock(m_dec_subkeys[2], (unsigned char*)input.data() + (i * 8));
+		}
 	}
 }

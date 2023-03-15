@@ -4,13 +4,15 @@
 
 #include <string>
 
+#include "OpenCL.h"
+
 #ifdef DLL_IMPORT
 #define GPU_API __declspec(dllimport)
 #else
 #define GPU_API __declspec(dllexport)
 #endif
 
-namespace cuda::des
+namespace opencl::des
 {
 	class DES : public EncryptBase
 	{
@@ -36,7 +38,10 @@ namespace cuda::des
 	private:
 		unsigned int m_rounds;
 
-		unsigned char* m_subkeys;
+		Program m_program;
+
+		Program::FunctionID m_enc_id;
+		Program::FunctionID m_dec_id;
 	};
 
 	class TripleDES : public EncryptBase
@@ -63,6 +68,9 @@ namespace cuda::des
 	private:
 		unsigned int m_rounds;
 
-		unsigned char* m_subkeys;
+		Program m_program;
+
+		Program::FunctionID m_enc_id;
+		Program::FunctionID m_dec_id;
 	};
 }

@@ -26,9 +26,9 @@ namespace mbed
 
 		static int Test();
 
-		std::string Encrypt(const std::string& input) const override;
+		void EncryptInPlace(std::string& input) const override;
 
-		std::string Decrypt(const std::string& input) const override;
+		void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		mbedtls_des_context m_enc_ctx;
@@ -40,9 +40,9 @@ namespace mbed
 	public:
 		DESParallel(const std::string& key, size_t group_size = 1);
 
-		std::string Encrypt(const std::string& input) const override;
+		void EncryptInPlace(std::string& input) const override;
 
-		std::string Decrypt(const std::string& input) const override;
+		void DecryptInPlace(std::string& input) const override;
 	};
 
 	class TripleDES : public EncryptBase
@@ -58,9 +58,9 @@ namespace mbed
 
 		~TripleDES();
 
-		std::string Encrypt(const std::string& input) const override;
+		void EncryptInPlace(std::string& input) const override;
 
-		std::string Decrypt(const std::string& input) const override;
+		void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		mbedtls_des3_context m_enc_ctx;
@@ -72,9 +72,9 @@ namespace mbed
 	public:
 		TripleDESParallel(const std::string& key, size_t group_size = 1);
 
-		std::string Encrypt(const std::string& input) const override;
+		void EncryptInPlace(std::string& input) const override;
 
-		std::string Decrypt(const std::string& input) const override;
+		void DecryptInPlace(std::string& input) const override;
 	};
 
 	class AES : public EncryptBase
@@ -92,9 +92,9 @@ namespace mbed
 
 		static int Test();
 
-		std::string Encrypt(const std::string& input) const override;
+		void EncryptInPlace(std::string& input) const override;
 
-		std::string Decrypt(const std::string& input) const override;
+		void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		mbedtls_aes_context m_ctx;
@@ -105,9 +105,9 @@ namespace mbed
 	public:
 		AESParallel(const std::string& key, size_t group_size = 1);
 
-		std::string Encrypt(const std::string& input) const override;
+		void EncryptInPlace(std::string& input) const override;
 
-		std::string Decrypt(const std::string& input) const override;
+		void DecryptInPlace(std::string& input) const override;
 
 	private:
 		size_t m_group_size;

@@ -87,16 +87,17 @@
   <ItemGroup>
     <CudaCompile Include="AES.cu" />
     <CudaCompile Include="DES.cu" />
-    <CudaCompile Include="GPU.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AES.h" />
     <ClInclude Include="AEScl.h" />
     <ClInclude Include="DES.h" />
+    <ClInclude Include="DEScl.h" />
     <ClInclude Include="OpenCL.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AEScl.cpp" />
+    <ClCompile Include="DEScl.cpp" />
     <ClCompile Include="OpenCL.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -2,7 +2,6 @@
 
 #include "../Shared/Base.h"
 
-#include <bitset>
 #include <string>
 
 namespace des::v2
@@ -24,13 +23,9 @@ namespace des::v2
 
 		~DES();
 
-		void EncryptInPlace(std::string& input) const;
+		void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const;
-
-		std::string Encrypt(const std::string& input) const override;
-
-		std::string Decrypt(const std::string& input) const override;
+		void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		unsigned char m_enc_subkeys[96] = { 0 };
@@ -42,12 +37,8 @@ namespace des::v2
 	public:
 		DESParallel(const std::string& key, size_t group_size = 1);
 
-		void EncryptInPlace(std::string& input) const;
+		void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const;
-
-		std::string Encrypt(const std::string& input) const override;
-
-		std::string Decrypt(const std::string& input) const override;
+		void DecryptInPlace(std::string& input) const override;
 	};
 }
