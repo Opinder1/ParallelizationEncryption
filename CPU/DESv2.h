@@ -2,6 +2,8 @@
 
 #include "../Shared/Base.h"
 
+#include "Api.h"
+
 #include <string>
 
 namespace des::v2
@@ -19,13 +21,13 @@ namespace des::v2
 			unsigned char bytes[8][4] = {};
 		};
 
-		DES(const std::string& key, size_t group_size = 1);
+		CPU_API DES(const std::string& key, size_t group_size = 1);
 
-		~DES();
+		CPU_API ~DES();
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		unsigned char m_enc_subkeys[96] = { 0 };
@@ -35,10 +37,10 @@ namespace des::v2
 	class DESParallel : public DES
 	{
 	public:
-		DESParallel(const std::string& key, size_t group_size = 1);
+		CPU_API DESParallel(const std::string& key, size_t group_size = 1);
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 	};
 }

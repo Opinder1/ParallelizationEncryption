@@ -2,15 +2,10 @@
 
 #include "../Shared/Base.h"
 
-#include <string>
-
 #include "OpenCL.h"
+#include "Api.h"
 
-#ifdef DLL_IMPORT
-#define GPU_API __declspec(dllimport)
-#else
-#define GPU_API __declspec(dllexport)
-#endif
+#include <string>
 
 namespace opencl::aes
 {

@@ -332,7 +332,7 @@ namespace aes::v3
 
 	}
 
-	void AES::EncryptBlock(unsigned char block[16]) const
+	void AES::EncryptBlockECB(unsigned char block[16]) const
 	{
 		for (size_t i = 0; i < 4 * 4; i++)
 		{
@@ -389,7 +389,7 @@ namespace aes::v3
 		}
 	}
 
-	void AES::DecryptBlock(unsigned char block[16]) const
+	void AES::DecryptBlockECB(unsigned char block[16]) const
 	{
 		{
 			const unsigned char* const key_bytes = m_subkeys + (m_rounds * 4 * 4);
@@ -444,6 +444,37 @@ namespace aes::v3
 		}
 	}
 
+	void AES::EncryptBlockCTR(unsigned char block[16], size_t index) const
+	{
+		unsigned char index_block[16] = { 0 };
+
+		*(size_t*)&index_block = index;
+
+		EncryptBlockECB(index_block);
+		EncryptBlockECB(block);
+
+		for (size_t i = 0; i < 4 * 4; i++)
+		{
+			block[i] = block[i] ^ index_block[i];
+		}
+	}
+
+	void AES::DecryptBlockCTR(unsigned char block[16], size_t index) const
+	{
+		unsigned char index_block[16] = { 0 };
+
+		*(size_t*)&index_block = index;
+
+		EncryptBlockECB(index_block);
+
+		for (size_t i = 0; i < 4 * 4; i++)
+		{
+			block[i] = block[i] ^ index_block[i];
+		}
+
+		DecryptBlockECB(block);
+	}
+
 	void AES::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
@@ -453,7 +484,7 @@ namespace aes::v3
 
 		for (size_t i = 0; i < input.size(); i += 16)
 		{
-			EncryptBlock((unsigned char*)input.data() + i);
+			EncryptBlockCTR((unsigned char*)input.data() + i, i);
 		}
 	}
 
@@ -466,7 +497,7 @@ namespace aes::v3
 
 		for (size_t i = 0; i < input.size(); i += 16)
 		{
-			DecryptBlock((unsigned char*)input.data() + i);
+			DecryptBlockCTR((unsigned char*)input.data() + i, i);
 		}
 	}
 
@@ -488,9 +519,9 @@ namespace aes::v3
 
 		int i;
 #pragma omp parallel for num_threads(16)
-		for (i = 0; i < input.size(); i += 16)
+		for (i = 0; i < input.size() / k_block_size; i += 16)
 		{
-			EncryptBlock((unsigned char*)input.data() + i);
+			EncryptBlockCTR((unsigned char*)input.data() + i, i);
 		}
 	}
 
@@ -503,9 +534,9 @@ namespace aes::v3
 
 		int i;
 #pragma omp parallel for num_threads(16)
-		for (i = 0; i < input.size(); i += 16)
+		for (i = 0; i < input.size() / k_block_size; i += 16)
 		{
-			DecryptBlock((unsigned char*)input.data() + i);
+			DecryptBlockCTR((unsigned char*)input.data() + i, i);
 		}
 	}
 }

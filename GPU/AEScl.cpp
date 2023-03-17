@@ -80,8 +80,8 @@ namespace opencl::aes
 	AES::AES(const std::string& key, size_t group_size) :
 		EncryptBase(key),
 		m_program("aes.cl"),
-		m_enc_id(m_program.MakeFunction("encrypt")),
-		m_dec_id(m_program.MakeFunction("decrypt"))
+		m_enc_id(m_program.MakeFunction("EncryptBlockCTR")),
+		m_dec_id(m_program.MakeFunction("DecryptBlockCTR"))
 	{
 		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
 		{

@@ -2,6 +2,8 @@
 
 #include "../Shared/Base.h"
 
+#include "Api.h"
+
 #include <string>
 
 namespace des::v3
@@ -19,11 +21,11 @@ namespace des::v3
 			unsigned char bytes[8][4] = {};
 		};
 
-		DES(const std::string& key, size_t group_size = 1);
+		CPU_API DES(const std::string& key);
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		unsigned char m_enc_subkeys[96] = { 0 };
@@ -33,11 +35,11 @@ namespace des::v3
 	class DESParallel : public DES
 	{
 	public:
-		DESParallel(const std::string& key, size_t group_size = 1);
+		CPU_API DESParallel(const std::string& key, size_t group_size = 1);
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 	};
 
 	class TripleDES : public EncryptBase
@@ -53,11 +55,11 @@ namespace des::v3
 			unsigned char bytes[8][4] = {};
 		};
 
-		TripleDES(const std::string& key, size_t group_size = 1);
+		CPU_API TripleDES(const std::string& key);
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		unsigned char m_enc_subkeys[3][96] = { 0 };
@@ -67,10 +69,10 @@ namespace des::v3
 	class TripleDESParallel : public TripleDES
 	{
 	public:
-		TripleDESParallel(const std::string& key, size_t group_size = 1);
+		CPU_API TripleDESParallel(const std::string& key, size_t group_size = 1);
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 	};
 }

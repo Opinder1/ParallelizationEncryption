@@ -2,6 +2,8 @@
 
 #include "../Shared/Base.h"
 
+#include "Api.h"
+
 #include <bitset>
 #include <string>
 
@@ -20,18 +22,22 @@ namespace aes::v3
 			unsigned char bytes[8][4] = {};
 		};
 
-		AES(const std::string& key);
+		CPU_API AES(const std::string& key);
 
-		~AES();
+		CPU_API ~AES();
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 
 	protected:
-		void EncryptBlock(unsigned char block[16]) const;
+		void EncryptBlockECB(unsigned char block[16]) const;
 
-		void DecryptBlock(unsigned char block[16]) const;
+		void DecryptBlockECB(unsigned char block[16]) const;
+
+		void EncryptBlockCTR(unsigned char block[16], size_t index) const;
+
+		void DecryptBlockCTR(unsigned char block[16], size_t index) const;
 
 	private:
 		size_t m_key_bits;
@@ -43,10 +49,10 @@ namespace aes::v3
 	class AESParallel : public AES
 	{
 	public:
-		AESParallel(const std::string& key, size_t group_size = 1);
+		CPU_API AESParallel(const std::string& key, size_t group_size = 1);
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 	};
 }

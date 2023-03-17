@@ -91,6 +91,7 @@
   <ItemGroup>
     <ClInclude Include="AES.h" />
     <ClInclude Include="AEScl.h" />
+    <ClInclude Include="Api.h" />
     <ClInclude Include="DES.h" />
     <ClInclude Include="DEScl.h" />
     <ClInclude Include="OpenCL.h" />

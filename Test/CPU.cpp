@@ -2,18 +2,16 @@
 
 #include <gtest/gtest.h>
 
-#include "MbedTest.h"
-#include "DESv2.h"
-#include "DESv3.h"
-#include "AESv1.h"
-#include "AESv2.h"
-#include "AESv3.h"
+#include "../CPU/MbedTest.h"
+#include "../CPU/DESv2.h"
+#include "../CPU/DESv3.h"
+#include "../CPU/AESv1.h"
+#include "../CPU/AESv2.h"
+#include "../CPU/AESv3.h"
 #include "../GPU/AES.h"
 #include "../GPU/AEScl.h"
 #include "../GPU/DES.h"
 #include "../GPU/DEScl.h"
-
-#include "Triple.h"
 
 void TestEncrypt(const EncryptBase& base, size_t block_size)
 {
@@ -96,7 +94,7 @@ void TestVersions()
 {
 	const std::string key(Main::k_min_key_size, 'B');
 
-	const std::string input(64, 'A');
+	const std::string input(16, 'A');
 
 	const Main main(key);
 
@@ -137,10 +135,14 @@ inline float TimeFunc(size_t num, const F& function, Args&... args)
 	return time_sec;
 }
 
-int main()
+void TimeEncrypt(const EncryptBase& alg, const std::string& in, std::string& out)
 {
-	opencl::InitOpenCL();
+	out = alg.Encrypt(in);
+	out = alg.Decrypt(out);
+};
 
+void RunAllTests()
+{
 	TestCrypt<mbed::DES>();
 	TestCrypt<mbed::TripleDES>();
 	TestCrypt<mbed::AES>();
@@ -164,66 +166,97 @@ int main()
 	TestParallelCrypt<opencl::aes::AES>();
 	TestParallelCrypt<opencl::des::DES>();
 
-	TestVersions<des::v2::DES, des::v2::DESParallel, des::v3::DES, des::v3::DESParallel, cuda::des::DES, opencl::des::DES>();
+	TestVersions<des::v3::DES, des::v3::DESParallel, cuda::des::DES, opencl::des::DES>();
 	TestVersions<des::v3::TripleDES, des::v3::TripleDESParallel, cuda::des::TripleDES, opencl::des::TripleDES>();
 
-	TestVersions<aes::v1::AES, aes::v2::AES, aes::v3::AES, cuda::aes::AES, opencl::aes::AES>();
+	TestVersions<aes::v3::AES, cuda::aes::AES, opencl::aes::AES>();
+}
 
-	const std::string in(1024 * 1024 * 200, 'A');
-	std::string out;
+void TimeAndGraph(const std::vector<EncryptBase*> algorithms)
+{
+	std::string command;
+	command.append("python -c \"");
+	command.append("from matplotlib import pyplot;");
 
-	auto TimeEncrypt = [&in, &out](const EncryptBase& alg) {
-		out = alg.Encrypt(in);
-		out = alg.Decrypt(out);
-	};
-
+	for (auto algorithm : algorithms)
 	{
-		mbed::TripleDESParallel des(BinToStr("101010101011101100001001000110000010011100110110110011001101110110101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"), 1);
+		std::string x = "[";
+		std::string y = "[";
 
-		printf("Time TripleDESParallel (mbed): %f\n", TimeFunc(1, TimeEncrypt, des));
+		for (size_t i = 0; i < 20; i++)
+		{
+			printf("%i ", i);
+			size_t data_size = 16 * (1 << i);
+
+			const std::string in(data_size, 'A');
+			std::string out;
+
+			TimeFunc(1, TimeEncrypt, *algorithm, in, out);
+
+			float t = TimeFunc(10, TimeEncrypt, *algorithm, in, out) / 10.0f;
+
+			x.append(std::to_string(t));
+			x.append(",");
+
+			y.append(std::to_string(data_size));
+			y.append(",");
+
+			printf("%i\n", i);
+		}
+
+		x.append("],");
+		y.append("],");
+
+		command.append("pyplot.plot(");
+		command.append(y);
+		command.append(x);
+		command.append("label='");
+		command.append(typeid(*algorithm).name());
+		command.append("');");
 	}
 
-	{
-		des::v3::TripleDESParallel des(BinToStr("101010101011101100001001000110000010011100110110110011001101110110101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"), 1);
+	command.append("pyplot.legend();");
+	command.append("pyplot.title('AES algorithm speed based on data size input');");
+	command.append("pyplot.xlabel('data size (bytes)');");
+	command.append("pyplot.ylabel('time (s)');");
+	command.append("pyplot.xscale('log');");
+	command.append("pyplot.yscale('log');");
+	//command.append("pyplot.xlim(16, 1024*1024*4);");
+	//command.append("pyplot.ylim(0.00001, 1);");
+	command.append("pyplot.show();\"");
 
-		printf("Time TripleDESParallel (v3): %f\n", TimeFunc(1, TimeEncrypt, des));
-	}
+	// Easy way of using matplotlib with c++ for testing purposes
+	system(command.c_str());
+}
 
-	{
-		cuda::des::TripleDES aes(BinToStr("101010101011101100001001000110000010011100110110110011001101110110101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
+void RunAllAnalysis()
+{
+	const std::string key1 = BinToStr("101010101011101100001001000110000010011100110110110011001101110110101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101");
 
-		printf("Time DESParallel (cuda): %f\n", TimeFunc(1, TimeEncrypt, aes));
-	}
+	des::v3::TripleDES des1(key1);
+	des::v3::TripleDESParallel des2(key1, 1);
+	cuda::des::TripleDES des3(key1, 1);
+	opencl::des::TripleDES des4(key1, 1);
 
-	{
-		opencl::des::TripleDES aes(BinToStr("101010101011101100001001000110000010011100110110110011001101110110101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
+	TimeAndGraph({ &des1, &des2, &des3, &des4 });
 
-		printf("Time DESParallel (opencl): %f\n", TimeFunc(1, TimeEncrypt, aes));
-	}
+	const std::string key2 = BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011010");
 
-	{
-		mbed::AESParallel aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
+	aes::v3::AES aes1(key2);
+	aes::v3::AESParallel aes2(key2, 1);
+	cuda::aes::AES aes3(key2, 1);
+	opencl::aes::AES aes4(key2, 1);
 
-		printf("Time AESParallel (mbed): %f\n", TimeFunc(1, TimeEncrypt, aes));
-	}
+	TimeAndGraph({ &aes1, &aes2, &aes3, &aes4 });
+}
 
-	{
-		aes::v3::AESParallel aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
+int main()
+{
+	opencl::InitOpenCL();
 
-		printf("Time AESParallel (v3): %f\n", TimeFunc(1, TimeEncrypt, aes));
-	}
+	RunAllTests();
 
-	{
-		cuda::aes::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-
-		printf("Time AESParallel (cuda): %f\n", TimeFunc(1, TimeEncrypt, aes));
-	}
-
-	{
-		opencl::aes::AES aes(BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011101"));
-
-		printf("Time AESParallel (opencl): %f\n", TimeFunc(1, TimeEncrypt, aes));
-	}
+	//RunAllAnalysis();
 
 	opencl::ShutdownOpenCL();
 }

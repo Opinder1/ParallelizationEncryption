@@ -1,14 +1,10 @@
 #pragma once
 
+#include "Api.h"
+
 #include <string>
 #include <memory>
 #include <unordered_map>
-
-#ifdef DLL_IMPORT
-#define GPU_API __declspec(dllimport)
-#else
-#define GPU_API __declspec(dllexport)
-#endif
 
 namespace opencl
 {

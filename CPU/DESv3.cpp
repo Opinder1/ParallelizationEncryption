@@ -521,14 +521,9 @@ namespace des::v3
 		Permute(temp, block, final_perm_l.data(), final_perm_r.data(), 64);
 	}
 
-	DES::DES(const std::string& key, size_t group_size) :
+	DES::DES(const std::string& key) :
 		EncryptBase(key)
 	{
-		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
-		{
-			throw Exception{};
-		}
-
 		if (key.size() != k_min_key_size)
 		{
 			throw Exception{};
@@ -598,9 +593,12 @@ namespace des::v3
 	}
 
 	DESParallel::DESParallel(const std::string& key, size_t group_size) :
-		DES(key, group_size)
+		DES(key)
 	{
-
+		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
+		{
+			throw Exception{};
+		}
 	}
 
 	void DESParallel::EncryptInPlace(std::string& input) const
@@ -635,14 +633,9 @@ namespace des::v3
 		}
 	}
 
-	TripleDES::TripleDES(const std::string& key, size_t group_size) :
+	TripleDES::TripleDES(const std::string& key) :
 		EncryptBase(key)
 	{
-		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
-		{
-			throw Exception{};
-		}
-
 		if (key.size() != k_min_key_size)
 		{
 			throw Exception{};
@@ -719,9 +712,12 @@ namespace des::v3
 	}
 
 	TripleDESParallel::TripleDESParallel(const std::string& key, size_t group_size) :
-		TripleDES(key, group_size)
+		TripleDES(key)
 	{
-
+		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
+		{
+			throw Exception{};
+		}
 	}
 
 	void TripleDESParallel::EncryptInPlace(std::string& input) const

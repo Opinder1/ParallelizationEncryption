@@ -2,8 +2,9 @@
 
 #include "../Shared/Base.h"
 
-#include "mbedtls/des.h"
+#include "Api.h"
 
+#include "mbedtls/des.h"
 #include "mbedtls/aes.h"
 
 #include <string>
@@ -20,15 +21,15 @@ namespace mbed
 		struct Exception {};
 
 	public:
-		DES(const std::string& key);
+		CPU_API DES(const std::string& key);
 
-		~DES();
+		CPU_API ~DES();
 
-		static int Test();
+		CPU_API static int Test();
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		mbedtls_des_context m_enc_ctx;
@@ -38,11 +39,11 @@ namespace mbed
 	class DESParallel : public DES
 	{
 	public:
-		DESParallel(const std::string& key, size_t group_size = 1);
+		CPU_API DESParallel(const std::string& key, size_t group_size = 1);
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 	};
 
 	class TripleDES : public EncryptBase
@@ -54,13 +55,13 @@ namespace mbed
 		struct Exception {};
 
 	public:
-		TripleDES(const std::string& key);
+		CPU_API TripleDES(const std::string& key);
 
-		~TripleDES();
+		CPU_API ~TripleDES();
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		mbedtls_des3_context m_enc_ctx;
@@ -70,11 +71,11 @@ namespace mbed
 	class TripleDESParallel : public TripleDES
 	{
 	public:
-		TripleDESParallel(const std::string& key, size_t group_size = 1);
+		CPU_API TripleDESParallel(const std::string& key, size_t group_size = 1);
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 	};
 
 	class AES : public EncryptBase
@@ -86,15 +87,15 @@ namespace mbed
 		struct Exception {};
 
 	public:
-		AES(const std::string& key);
+		CPU_API AES(const std::string& key);
 
-		~AES();
+		CPU_API ~AES();
 
-		static int Test();
+		CPU_API static int Test();
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		mbedtls_aes_context m_ctx;
@@ -103,11 +104,11 @@ namespace mbed
 	class AESParallel : public AES
 	{
 	public:
-		AESParallel(const std::string& key, size_t group_size = 1);
+		CPU_API AESParallel(const std::string& key, size_t group_size = 1);
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 
 	private:
 		size_t m_group_size;

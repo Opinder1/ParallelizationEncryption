@@ -70,7 +70,11 @@ cl_program CreateProgramFromFile(cl_context ctx, const std::string& path, int& e
 {
     std::fstream stream(path);
 
-    bool i = stream.is_open();
+    if (!stream.is_open())
+    {
+        err = -100;
+        return nullptr;
+    }
 
     return CreateProgramFromData(ctx, ReadWholeStream(stream), err);
 }

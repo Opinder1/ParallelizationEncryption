@@ -303,10 +303,8 @@ namespace cuda::aes
 		}
 	}
 
-	__global__ void EncryptBlock(unsigned char* subkeys, unsigned int rounds, unsigned char* block)
+	__device__ void EncryptBlockECB(unsigned char* subkeys, unsigned int rounds, unsigned char* block)
 	{
-		block += threadIdx.x * 16;
-
 #pragma unroll
 		for (size_t i = 0; i < 4 * 4; i++)
 		{
@@ -361,10 +359,8 @@ namespace cuda::aes
 		}
 	}
 
-	__global__ void DecryptBlock(unsigned char* subkeys, unsigned int rounds, unsigned char* block)
+	__device__ void DecryptBlockECB(unsigned char* subkeys, unsigned int rounds, unsigned char* block)
 	{
-		block += threadIdx.x * 16;
-
 		const unsigned char* const key_bytes = subkeys + (rounds * 4 * 4);
 
 #pragma unroll
@@ -415,6 +411,43 @@ namespace cuda::aes
 		{
 			block[i] = temp[i] ^ subkeys[i];
 		}
+	}
+
+	__global__ void EncryptBlockCTR(unsigned char* subkeys, unsigned int rounds, unsigned char* block)
+	{
+		size_t index = threadIdx.x;
+		block += index * 16;
+
+		unsigned char index_block[16] = { 0 };
+
+		*(size_t*)&index_block = index;
+
+		EncryptBlockECB(subkeys, rounds, index_block);
+		EncryptBlockECB(subkeys, rounds, block);
+
+		for (size_t i = 0; i < 4 * 4; i++)
+		{
+			block[i] = block[i] ^ index_block[i];
+		}
+	}
+
+	__global__ void DecryptBlockCTR(unsigned char* subkeys, unsigned int rounds, unsigned char* block)
+	{
+		size_t index = threadIdx.x;
+		block += index * 16;
+
+		unsigned char index_block[16] = { 0 };
+
+		*(size_t*)&index_block = index;
+
+		EncryptBlockECB(subkeys, rounds, index_block);
+
+		for (size_t i = 0; i < 4 * 4; i++)
+		{
+			block[i] = block[i] ^ index_block[i];
+		}
+
+		DecryptBlockECB(subkeys, rounds, block);
 	}
 
 	AES::AES(const std::string& key, size_t group_size) :
@@ -497,7 +530,7 @@ namespace cuda::aes
 		}
 
 		unsigned int num = (unsigned int)input.size() / k_block_size;
-		EncryptBlock<<<1, num>>>(m_subkeys, m_rounds, mem);
+		EncryptBlockCTR<<<1, num>>>(m_subkeys, m_rounds, mem);
 
 		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
 		{
@@ -534,7 +567,7 @@ namespace cuda::aes
 		}
 
 		unsigned int num = (unsigned int)input.size() / k_block_size;
-		DecryptBlock<<<1, num>>>(m_subkeys, m_rounds, mem);
+		DecryptBlockCTR<<<1, num>>>(m_subkeys, m_rounds, mem);
 
 		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
 		{

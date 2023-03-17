@@ -2,6 +2,8 @@
 
 #include "../Shared/Base.h"
 
+#include "Api.h"
+
 #include <bitset>
 #include <string>
 
@@ -20,13 +22,13 @@ namespace aes::v2
 			unsigned char bytes[8][4] = {};
 		};
 
-		AES(const std::string& key);
+		CPU_API AES(const std::string& key);
 
-		~AES();
+		CPU_API ~AES();
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		void EncryptBlock(unsigned char block[16]) const;
@@ -58,10 +60,10 @@ namespace aes::v2
 	class AESParallel : public AES
 	{
 	public:
-		AESParallel(const std::string& key, size_t group_size = 1);
+		CPU_API AESParallel(const std::string& key, size_t group_size = 1);
 
-		void EncryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
 
-		void DecryptInPlace(std::string& input) const override;
+		CPU_API void DecryptInPlace(std::string& input) const override;
 	};
 }

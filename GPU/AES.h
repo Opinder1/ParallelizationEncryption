@@ -2,14 +2,10 @@
 
 #include "../Shared/Base.h"
 
+#include "Api.h"
+
 #include <bitset>
 #include <string>
-
-#ifdef DLL_IMPORT
-#define GPU_API __declspec(dllimport)
-#else
-#define GPU_API __declspec(dllexport)
-#endif
 
 namespace cuda::aes
 {

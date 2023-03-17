@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CPU.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MbedTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -56,7 +53,7 @@
     <ClInclude Include="DESv3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Triple.h">
+    <ClInclude Include="Api.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
