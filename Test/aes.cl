@@ -332,8 +332,6 @@ __kernel void EncryptBlockCTR(__global const uchar16* subkeys, uint rounds, __gl
 
 	index_block = EncryptBlockECB(subkeys, rounds, index_block);
 
-	block = EncryptBlockECB(subkeys, rounds, block);
-
 	blocks[index] = block ^ index_block;
 }
 
@@ -348,7 +346,5 @@ __kernel void DecryptBlockCTR(__global const uchar16* subkeys, uint rounds, __gl
 
 	index_block = EncryptBlockECB(subkeys, rounds, index_block);
 
-	block = block ^ index_block;
-
-	blocks[index] = DecryptBlockECB(subkeys, rounds, block);
+	blocks[index] = block ^ index_block;
 }

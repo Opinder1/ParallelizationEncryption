@@ -221,3 +221,11 @@ inline size_t CeilSize(size_t val, size_t size)
 {
 	return (((val - 1) / size) + 1) * size;
 }
+
+template<class... Args>
+std::string Format(const char* format, Args&&... args)
+{
+	char buffer[256];
+	sprintf_s(buffer, format, std::forward<Args>(args)...);
+	return std::string(buffer);
+}

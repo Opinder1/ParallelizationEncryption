@@ -423,7 +423,6 @@ namespace cuda::aes
 		*(size_t*)&index_block = index;
 
 		EncryptBlockECB(subkeys, rounds, index_block);
-		EncryptBlockECB(subkeys, rounds, block);
 
 		for (size_t i = 0; i < 4 * 4; i++)
 		{
@@ -446,8 +445,6 @@ namespace cuda::aes
 		{
 			block[i] = block[i] ^ index_block[i];
 		}
-
-		DecryptBlockECB(subkeys, rounds, block);
 	}
 
 	AES::AES(const std::string& key, size_t group_size) :

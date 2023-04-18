@@ -8,6 +8,11 @@
 
 namespace opencl
 {
+	struct CLException
+	{
+		const char* msg;
+	};
+
 	GPU_API void InitOpenCL();
 
 	GPU_API void ShutdownOpenCL();

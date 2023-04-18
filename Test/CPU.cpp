@@ -68,6 +68,8 @@ void TestCrypt()
 
 		TestDecrypt(algorithmn, T::k_block_size);
 	}
+
+	printf("%s passed\n", typeid(T).name());
 }
 
 template<class T>
@@ -87,6 +89,8 @@ void TestParallelCrypt()
 	}
 
 	TestCrypt<T>();
+
+	printf("%s passed\n", typeid(T).name());
 }
 
 template<class Main, class... Others>
@@ -104,7 +108,6 @@ void TestVersions()
 
 	auto test = [&main_enc, &main_dec, &input](const EncryptBase& alg)
 	{
-		printf("%s\n", typeid(alg).name());
 		std::string other_enc = alg.Encrypt(input);
 
 		EXPECT_EQ(main_enc, other_enc);
@@ -115,6 +118,11 @@ void TestVersions()
 	};
 
 	(test(Others(key)), ...);
+
+	std::string names;
+	(names.append(typeid(Others).name()), ...);
+
+	printf("[%s, %s] passed\n", typeid(Main).name(), names.c_str());
 }
 
 template<class F, class... Args>
@@ -172,20 +180,23 @@ void RunAllTests()
 	TestVersions<aes::v3::AES, cuda::aes::AES, opencl::aes::AES>();
 }
 
-void TimeAndGraph(const std::vector<EncryptBase*> algorithms)
+void TimeAndGraph(const char* name, const std::vector<EncryptBase*> algorithms)
 {
+	printf(Format("TimeAndGraph %s\n", name).c_str());
+
 	std::string command;
 	command.append("python -c \"");
 	command.append("from matplotlib import pyplot;");
 
 	for (auto algorithm : algorithms)
 	{
+		printf("%s\n", typeid(*algorithm).name());
+
 		std::string x = "[";
 		std::string y = "[";
 
 		for (size_t i = 0; i < 20; i++)
 		{
-			printf("%i ", i);
 			size_t data_size = 16 * (1 << i);
 
 			const std::string in(data_size, 'A');
@@ -193,15 +204,13 @@ void TimeAndGraph(const std::vector<EncryptBase*> algorithms)
 
 			TimeFunc(1, TimeEncrypt, *algorithm, in, out);
 
-			float t = TimeFunc(10, TimeEncrypt, *algorithm, in, out) / 10.0f;
+			float t = TimeFunc(1, TimeEncrypt, *algorithm, in, out) / 10.0f;
 
 			x.append(std::to_string(t));
 			x.append(",");
 
 			y.append(std::to_string(data_size));
 			y.append(",");
-
-			printf("%i\n", i);
 		}
 
 		x.append("],");
@@ -216,7 +225,7 @@ void TimeAndGraph(const std::vector<EncryptBase*> algorithms)
 	}
 
 	command.append("pyplot.legend();");
-	command.append("pyplot.title('AES algorithm speed based on data size input');");
+	command.append(Format("pyplot.title('%s algorithm speed based on data size input');", name));
 	command.append("pyplot.xlabel('data size (bytes)');");
 	command.append("pyplot.ylabel('time (s)');");
 	command.append("pyplot.xscale('log');");
@@ -238,7 +247,7 @@ void RunAllAnalysis()
 	cuda::des::TripleDES des3(key1, 1);
 	opencl::des::TripleDES des4(key1, 1);
 
-	TimeAndGraph({ &des1, &des2, &des3, &des4 });
+	TimeAndGraph("DES", { &des1, &des2, &des3, &des4 });
 
 	const std::string key2 = BinToStr("10101010101110110000100100011000001001110011011011001100110111011010101010111011000010010001100000100111001101101100110011011010");
 
@@ -247,7 +256,7 @@ void RunAllAnalysis()
 	cuda::aes::AES aes3(key2, 1);
 	opencl::aes::AES aes4(key2, 1);
 
-	TimeAndGraph({ &aes1, &aes2, &aes3, &aes4 });
+	TimeAndGraph("AES", { &aes1, &aes2, &aes3, &aes4 });
 }
 
 int main()
@@ -256,7 +265,7 @@ int main()
 
 	RunAllTests();
 
-	//RunAllAnalysis();
+	RunAllAnalysis();
 
 	opencl::ShutdownOpenCL();
 }

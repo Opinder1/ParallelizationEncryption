@@ -451,7 +451,6 @@ namespace aes::v3
 		*(size_t*)&index_block = index;
 
 		EncryptBlockECB(index_block);
-		EncryptBlockECB(block);
 
 		for (size_t i = 0; i < 4 * 4; i++)
 		{
@@ -471,8 +470,6 @@ namespace aes::v3
 		{
 			block[i] = block[i] ^ index_block[i];
 		}
-
-		DecryptBlockECB(block);
 	}
 
 	void AES::EncryptInPlace(std::string& input) const
