@@ -1,21 +1,26 @@
-﻿# CMakeList.txt : Top-level CMake project file, do global configuration
-# and include sub-projects here.
-#
-cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.8)
 
-#set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
+# Set the python executable
 set(Python3_EXECUTABLE "C:/users/opind/AppData/Local/Python38/python.exe")
 
-project ("ParallelizationEncryption" LANGUAGES C CXX)
+# Enable project folders when generating visual studio solution
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-include_directories("C:/VisualStudio/lib/include") # Location of all include folders for libraries
-link_directories("lib") # Localtion of gtest library .a
-link_directories("mbedtls/library") # Location of mbedtls library .a
+# Make sure gtest uses shared runtime libraries
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-# Directorys for cmakes for libraries
-add_subdirectory ("C:/VisualStudio/libraries/googletest-release-1.12.1" "gtest")
-add_subdirectory ("C:/VisualStudio/libraries/mbedtls-2.26.0" "mbedtls")
+# Needed to make cmake work
+set(GEN_FILES ON CACHE BOOL "" FORCE)
+set(ENABLE_TESTING ON CACHE BOOL "" FORCE)
 
-# Include sub-projects.
-add_subdirectory ("CPUGCC")
-add_subdirectory ("CPU")
+# Setup project to use C++ and CUDA
+project("ParallelizationEncryption" LANGUAGES C CXX CUDA)
+
+# Add libraries
+add_subdirectory("googletest")
+add_subdirectory("mbedtls")
+
+# Add projects
+add_subdirectory("CPU")
+add_subdirectory("GPU")
+add_subdirectory("Test")

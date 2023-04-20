@@ -129,7 +129,7 @@ namespace opencl::aes
 
 	AES::~AES()
 	{
-
+		
 	}
 
 	void AES::EncryptInPlace(std::string& input) const

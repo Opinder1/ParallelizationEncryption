@@ -3,15 +3,15 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-set (CPU_source "MbedTest.cpp" "DESv2.cpp" "DESv3.cpp" "AESv1.cpp" "AESv2.cpp" "AESv3.cpp" "MBedTest.cpp")
+set (Test_source "CPU.cpp")
 
 # Add source to this project's executable.
-add_library(CPU ${CPU_source})
+add_executable(Test ${Test_source})
 
-set_target_properties(CPU PROPERTIES
+set_target_properties(Test PROPERTIES
     CXX_STANDARD 17
     CXX_EXTENSIONS OFF
     FOLDER "Project"
 )
 
-target_link_libraries(CPU gtest mbedcrypto)
+target_link_libraries(Test CPU GPU gtest mbedcrypto opencl)

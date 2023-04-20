@@ -262,11 +262,11 @@ namespace aes::v2
 
 			SubWord(temp);
 
-			temp[0] = temp[0] xor rcon[key];
+			temp[0] = temp[0] ^ rcon[key];
 
 			for (size_t i = 0; i < 4; i++)
 			{
-				output[key].bytes[0][i] = output[key - 1].bytes[0][i] xor temp[i];
+				output[key].bytes[0][i] = output[key - 1].bytes[0][i] ^ temp[i];
 			}
 
 			for (size_t sub_key = 1; sub_key < SubkeyCount; sub_key++)
@@ -278,7 +278,7 @@ namespace aes::v2
 
 				for (size_t i = 0; i < 4; i++)
 				{
-					output[key].bytes[sub_key][i] = output[key - 1].bytes[sub_key][i] xor output[key].bytes[sub_key - 1][i];
+					output[key].bytes[sub_key][i] = output[key - 1].bytes[sub_key][i] ^ output[key].bytes[sub_key - 1][i];
 				}
 			}
 		}
@@ -326,7 +326,7 @@ namespace aes::v2
 
 		for (size_t i = 0; i < 4 * 4; i++)
 		{
-			state[i] = state[i] xor key_bytes[i];
+			state[i] = state[i] ^ key_bytes[i];
 		}
 	}
 

@@ -279,7 +279,7 @@ namespace aes::v3
 					temp[i] = sbox[temp[i]];
 				}
 
-				temp[0] = temp[0] xor rcon[block / Nk];
+				temp[0] = temp[0] ^ rcon[block / Nk];
 			}
 			else if (Nk > 6 && block % Nk == 4)
 			{
@@ -291,7 +291,7 @@ namespace aes::v3
 
 			for (size_t i = 0; i < 4; i++)
 			{
-				output[(block * 4) + i] = output[((block - Nk) * 4) + i] xor temp[i];
+				output[(block * 4) + i] = output[((block - Nk) * 4) + i] ^ temp[i];
 			}
 		}
 	}
@@ -336,7 +336,7 @@ namespace aes::v3
 	{
 		for (size_t i = 0; i < 4 * 4; i++)
 		{
-			block[i] = block[i] xor m_subkeys[i];
+			block[i] = block[i] ^ m_subkeys[i];
 		}
 
 		uint8_t temp[16];
@@ -372,7 +372,7 @@ namespace aes::v3
 
 				for (size_t i = 0; i < 4 * 4; i++)
 				{
-					block[i] = block[i] xor key_bytes[i];
+					block[i] = block[i] ^ key_bytes[i];
 				}
 			}
 		}
@@ -384,7 +384,7 @@ namespace aes::v3
 
 			for (size_t i = 0; i < 4 * 4; i++)
 			{
-				block[i] = temp[i] xor key_bytes[i];
+				block[i] = temp[i] ^ key_bytes[i];
 			}
 		}
 	}
@@ -396,7 +396,7 @@ namespace aes::v3
 
 			for (size_t i = 0; i < 4 * 4; i++)
 			{
-				block[i] = block[i] xor key_bytes[i];
+				block[i] = block[i] ^ key_bytes[i];
 			}
 		}
 
@@ -411,7 +411,7 @@ namespace aes::v3
 
 				for (size_t i = 0; i < 4 * 4; i++)
 				{
-					temp[i] = temp[i] xor key_bytes[i];
+					temp[i] = temp[i] ^ key_bytes[i];
 				}
 			}
 
@@ -440,7 +440,7 @@ namespace aes::v3
 
 		for (size_t i = 0; i < 4 * 4; i++)
 		{
-			block[i] = temp[i] xor m_subkeys[i];
+			block[i] = temp[i] ^ m_subkeys[i];
 		}
 	}
 

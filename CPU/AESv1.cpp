@@ -303,14 +303,14 @@ namespace aes::v1
 
 			if (key % SubkeyCount == 0)
 			{
-				temp = SubWord(RotWord(temp)) xor Rcon(key / SubkeyCount);
+				temp = SubWord(RotWord(temp)) ^ Rcon(key / SubkeyCount);
 			}
 			else if ((SubkeyCount > 6) && (key % SubkeyCount == 4))
 			{
 				temp = SubWord(temp);
 			}
 
-			out_ptr[key] = out_ptr[key - SubkeyCount] xor temp;
+			out_ptr[key] = out_ptr[key - SubkeyCount] ^ temp;
 		}
 	}
 
@@ -358,7 +358,7 @@ namespace aes::v1
 
 		for (size_t i = 0; i < 4 * 4; i++)
 		{
-			state.bytes[i] = state.bytes[i] xor key_bytes[i];
+			state.bytes[i] = state.bytes[i] ^ key_bytes[i];
 		}
 	}
 
