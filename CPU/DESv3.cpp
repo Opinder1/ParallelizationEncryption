@@ -308,7 +308,7 @@ namespace des::v3
 	void RotateLeft1Bit(unsigned char* set, size_t bit_start, size_t bit_size)
 	{
 		// First byte that we are modifying
-		unsigned char byte_start = bit_start / 8;
+		unsigned char byte_start = unsigned char(bit_start / 8);
 
 		// First bit of first byte we are modifying
 		unsigned char start_bit_index = bit_start % 8;
@@ -566,34 +566,38 @@ namespace des::v3
 		}
 	}
 
+	std::string DES::GetName() const
+	{
+		return "DES CPU 1 thread";
+	}
+
 	void DES::EncryptInPlace(std::string& input) const
 	{
-		if (input.size() == 0 || input.size() % k_block_size != 0)
-		{
-			throw Exception{};
-		}
-
-		for (size_t i = 0; i < input.size() / k_block_size; i++)
-		{
-			CryptBlock(m_enc_subkeys, (unsigned char*)input.data() + (i * 8));
-		}
+		Crypt(m_enc_subkeys, input);
 	}
 
 	void DES::DecryptInPlace(std::string& input) const
 	{
+		Crypt(m_dec_subkeys, input);
+	}
+
+	void DES::Crypt(const unsigned char subkeys[96], std::string& input) const
+	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
 			throw Exception{};
 		}
 
-		for (size_t i = 0; i < input.size() / k_block_size; i++)
+		for (size_t block = 0; block < input.size() / k_block_size; block++)
 		{
-			CryptBlock(m_dec_subkeys, (unsigned char*)input.data() + (i * 8));
+			CryptBlock(subkeys, (unsigned char*)input.data() + (block * k_block_size));
 		}
 	}
 
-	DESParallel::DESParallel(const std::string& key, size_t group_size) :
-		DES(key)
+	DESParallel::DESParallel(const std::string& key, size_t group_size, size_t thread_count) :
+		DES(key),
+		m_group_size(group_size),
+		m_thread_count(SizeToInt(thread_count))
 	{
 		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
 		{
@@ -601,35 +605,44 @@ namespace des::v3
 		}
 	}
 
+	std::string DESParallel::GetName() const
+	{
+		char buffer[48];
+		sprintf_s(buffer, "AES CPU %i threads %zi per group", m_thread_count, m_group_size);
+		return buffer;
+	}
+
 	void DESParallel::EncryptInPlace(std::string& input) const
 	{
-		if (input.size() == 0 || input.size() % k_block_size != 0)
-		{
-			throw Exception{};
-		}
-
-		int i;
-
-#pragma omp parallel for num_threads(16)
-		for (i = 0; i < input.size() / k_block_size; i++)
-		{
-			CryptBlock(m_enc_subkeys, (unsigned char*)input.data() + (i * 8));
-		}
+		Crypt(m_enc_subkeys, input);
 	}
 
 	void DESParallel::DecryptInPlace(std::string& input) const
 	{
+		Crypt(m_dec_subkeys, input);
+	}
+
+	void DESParallel::Crypt(const unsigned char subkeys[96], std::string& input) const
+	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
 			throw Exception{};
 		}
 
-		int i;
+		size_t num_blocks = input.size() / k_block_size;
+		size_t num_iterations = (num_blocks + m_group_size - 1) / m_group_size;
 
-#pragma omp parallel for num_threads(16)
-		for (i = 0; i < input.size() / k_block_size; i++)
+		int group;
+#pragma omp parallel for num_threads(m_thread_count)
+		for (group = 0; group < num_iterations; group++)
 		{
-			CryptBlock(m_dec_subkeys, (unsigned char*)input.data() + (i * 8));
+			size_t group_start = group * m_group_size;
+			size_t group_end = std::min(group_start + m_group_size, num_blocks);
+
+			for (size_t block = group_start; block < group_end; block++)
+			{
+				CryptBlock(subkeys, (unsigned char*)input.data() + (block * k_block_size));
+			}
 		}
 	}
 
@@ -681,38 +694,42 @@ namespace des::v3
 		}
 	}
 
+	std::string TripleDES::GetName() const
+	{
+		return "Triple DES 1 thread";
+	}
+
 	void TripleDES::EncryptInPlace(std::string& input) const
 	{
-		if (input.size() == 0 || input.size() % k_block_size != 0)
-		{
-			throw Exception{};
-		}
-
-		for (size_t i = 0; i < input.size() / k_block_size; i++)
-		{
-			CryptBlock(m_enc_subkeys[0], (unsigned char*)input.data() + (i * 8));
-			CryptBlock(m_dec_subkeys[1], (unsigned char*)input.data() + (i * 8));
-			CryptBlock(m_enc_subkeys[2], (unsigned char*)input.data() + (i * 8));
-		}
+		const unsigned char* subkeys[3] = {m_enc_subkeys[0], m_dec_subkeys[1], m_enc_subkeys[2]};
+		Crypt(subkeys, input);
 	}
 
 	void TripleDES::DecryptInPlace(std::string& input) const
 	{
+		const unsigned char* subkeys[3] = { m_dec_subkeys[0], m_enc_subkeys[1], m_dec_subkeys[2] };
+		Crypt(subkeys, input);
+	}
+
+	void TripleDES::Crypt(const unsigned char* subkeys[3], std::string& input) const
+	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
 			throw Exception{};
 		}
 
-		for (size_t i = 0; i < input.size() / k_block_size; i++)
+		for (size_t block = 0; block < input.size() / k_block_size; block++)
 		{
-			CryptBlock(m_dec_subkeys[0], (unsigned char*)input.data() + (i * 8));
-			CryptBlock(m_enc_subkeys[1], (unsigned char*)input.data() + (i * 8));
-			CryptBlock(m_dec_subkeys[2], (unsigned char*)input.data() + (i * 8));
+			CryptBlock(subkeys[0], (unsigned char*)input.data() + (block * k_block_size));
+			CryptBlock(subkeys[1], (unsigned char*)input.data() + (block * k_block_size));
+			CryptBlock(subkeys[2], (unsigned char*)input.data() + (block * k_block_size));
 		}
 	}
 
-	TripleDESParallel::TripleDESParallel(const std::string& key, size_t group_size) :
-		TripleDES(key)
+	TripleDESParallel::TripleDESParallel(const std::string& key, size_t group_size, size_t thread_count) :
+		TripleDES(key),
+		m_group_size(group_size),
+		m_thread_count(SizeToInt(thread_count))
 	{
 		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
 		{
@@ -720,39 +737,48 @@ namespace des::v3
 		}
 	}
 
+	std::string TripleDESParallel::GetName() const
+	{
+		char buffer[48];
+		sprintf_s(buffer, "AES CPU %i threads %zi per group", m_thread_count, m_group_size);
+		return buffer;
+	}
+
 	void TripleDESParallel::EncryptInPlace(std::string& input) const
 	{
-		if (input.size() == 0 || input.size() % k_block_size != 0)
-		{
-			throw Exception{};
-		}
-
-		int i;
-
-#pragma omp parallel for num_threads(16)
-		for (i = 0; i < input.size() / k_block_size; i++)
-		{
-			CryptBlock(m_enc_subkeys[0], (unsigned char*)input.data() + (i * 8));
-			CryptBlock(m_dec_subkeys[1], (unsigned char*)input.data() + (i * 8));
-			CryptBlock(m_enc_subkeys[2], (unsigned char*)input.data() + (i * 8));
-		}
+		const unsigned char* subkeys[3] = { m_enc_subkeys[0], m_dec_subkeys[1], m_enc_subkeys[2] };
+		Crypt(subkeys, input);
 	}
 
 	void TripleDESParallel::DecryptInPlace(std::string& input) const
 	{
+		const unsigned char* subkeys[3] = { m_dec_subkeys[0], m_enc_subkeys[1], m_dec_subkeys[2] };
+		Crypt(subkeys, input);
+	}
+
+	void TripleDESParallel::Crypt(const unsigned char* subkeys[3], std::string& input) const
+	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
 		{
 			throw Exception{};
 		}
 
-		int i;
+		size_t num_blocks = input.size() / k_block_size;
+		size_t num_iterations = (num_blocks + m_group_size - 1) / m_group_size;
 
-#pragma omp parallel for num_threads(16)
-		for (i = 0; i < input.size() / k_block_size; i++)
+		int group;
+#pragma omp parallel for num_threads(m_thread_count)
+		for (group = 0; group < num_iterations; group++)
 		{
-			CryptBlock(m_dec_subkeys[0], (unsigned char*)input.data() + (i * 8));
-			CryptBlock(m_enc_subkeys[1], (unsigned char*)input.data() + (i * 8));
-			CryptBlock(m_dec_subkeys[2], (unsigned char*)input.data() + (i * 8));
+			size_t group_start = group * m_group_size;
+			size_t group_end = std::min(group_start + m_group_size, num_blocks);
+
+			for (size_t block = group_start; block < group_end; block++)
+			{
+				CryptBlock(subkeys[0], (unsigned char*)input.data() + (block * k_block_size));
+				CryptBlock(subkeys[1], (unsigned char*)input.data() + (block * k_block_size));
+				CryptBlock(subkeys[2], (unsigned char*)input.data() + (block * k_block_size));
+			}
 		}
 	}
 }

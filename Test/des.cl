@@ -203,7 +203,7 @@ uchar4 Compress(uchar8 input)
 	return output;
 }
 
-void crypt_block(__global const uchar* subkeys, uint rounds, uchar8* block)
+void crypt_block(__global const uchar* subkeys, uchar8* block)
 {
 	uchar8 temp = 0;
 
@@ -261,26 +261,26 @@ void crypt_block(__global const uchar* subkeys, uint rounds, uchar8* block)
 	Permute((uchar*)&temp, (uchar*)block, final_perm_l, final_perm_r, 64);
 }
 
-__kernel void crypt(__global const uchar* subkeys, uint rounds, __global uchar* blocks)
+__kernel void crypt(__global const uchar* subkeys, __global uchar* blocks)
 {
 	size_t index = get_global_id(0);
 
 	uchar8 block = vload8(index, blocks);
 
-	crypt_block(subkeys, rounds, &block);
+	crypt_block(subkeys, &block);
 
 	vstore8(block, index, blocks);
 }
 
-__kernel void triplecrypt(__global const uchar* subkeys, uint rounds, __global uchar* blocks)
+__kernel void triplecrypt(__global const uchar* subkeys, __global uchar* blocks)
 {
 	size_t index = get_global_id(0);
 
 	uchar8 block = vload8(index, blocks);
 
-	crypt_block(subkeys + (96 * 0), rounds, &block);
-	crypt_block(subkeys + (96 * 1), rounds, &block);
-	crypt_block(subkeys + (96 * 2), rounds, &block);
+	crypt_block(subkeys + (96 * 0), &block);
+	crypt_block(subkeys + (96 * 1), &block);
+	crypt_block(subkeys + (96 * 2), &block);
 
 	vstore8(block, index, blocks);
 }

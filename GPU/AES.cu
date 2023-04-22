@@ -448,7 +448,8 @@ namespace cuda::aes
 	}
 
 	AES::AES(const std::string& key, size_t group_size) :
-		EncryptBase(key)
+		EncryptBase(key),
+		m_group_size(group_size)
 	{
 		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
 		{
@@ -503,6 +504,13 @@ namespace cuda::aes
 	AES::~AES()
 	{
 		cudaFree(m_subkeys);
+	}
+
+	std::string AES::GetName() const
+	{
+		char buffer[32];
+		sprintf_s(buffer, "AES CUDA %zi per group", m_group_size);
+		return buffer;
 	}
 
 	void AES::EncryptInPlace(std::string& input) const

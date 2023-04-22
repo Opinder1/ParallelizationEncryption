@@ -23,9 +23,14 @@ namespace des::v3
 
 		CPU_API DES(const std::string& key);
 
+		CPU_API std::string GetName() const override;
+
 		CPU_API void EncryptInPlace(std::string& input) const override;
 
 		CPU_API void DecryptInPlace(std::string& input) const override;
+
+	private:
+		void Crypt(const unsigned char subkeys[96], std::string& input) const;
 
 	protected:
 		unsigned char m_enc_subkeys[96] = { 0 };
@@ -35,11 +40,20 @@ namespace des::v3
 	class DESParallel : public DES
 	{
 	public:
-		CPU_API DESParallel(const std::string& key, size_t group_size = 1);
+		CPU_API DESParallel(const std::string& key, size_t group_size = 1, size_t thread_count = 16);
+
+		CPU_API std::string GetName() const override;
 
 		CPU_API void EncryptInPlace(std::string& input) const override;
 
 		CPU_API void DecryptInPlace(std::string& input) const override;
+
+	private:
+		void Crypt(const unsigned char subkeys[96], std::string& input) const;
+
+	private:
+		size_t m_group_size;
+		int m_thread_count;
 	};
 
 	class TripleDES : public EncryptBase
@@ -57,9 +71,14 @@ namespace des::v3
 
 		CPU_API TripleDES(const std::string& key);
 
+		CPU_API std::string GetName() const override;
+
 		CPU_API void EncryptInPlace(std::string& input) const override;
 
 		CPU_API void DecryptInPlace(std::string& input) const override;
+
+	private:
+		void Crypt(const unsigned char* subkeys[3], std::string& input) const;
 
 	protected:
 		unsigned char m_enc_subkeys[3][96] = { 0 };
@@ -69,10 +88,19 @@ namespace des::v3
 	class TripleDESParallel : public TripleDES
 	{
 	public:
-		CPU_API TripleDESParallel(const std::string& key, size_t group_size = 1);
+		CPU_API TripleDESParallel(const std::string& key, size_t group_size = 1, size_t thread_count = 16);
+
+		CPU_API std::string GetName() const override;
 
 		CPU_API void EncryptInPlace(std::string& input) const override;
 
 		CPU_API void DecryptInPlace(std::string& input) const override;
+
+	private:
+		void Crypt(const unsigned char* subkeys[3], std::string& input) const;
+
+	private:
+		size_t m_group_size;
+		int m_thread_count;
 	};
 }

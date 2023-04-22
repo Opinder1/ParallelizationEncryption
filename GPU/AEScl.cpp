@@ -81,7 +81,8 @@ namespace opencl::aes
 		EncryptBase(key),
 		m_program("aes.cl"),
 		m_enc_id(m_program.MakeFunction("EncryptBlockCTR")),
-		m_dec_id(m_program.MakeFunction("DecryptBlockCTR"))
+		m_dec_id(m_program.MakeFunction("DecryptBlockCTR")),
+		m_group_size(group_size)
 	{
 		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
 		{
@@ -130,6 +131,13 @@ namespace opencl::aes
 	AES::~AES()
 	{
 		
+	}
+
+	std::string AES::GetName() const
+	{
+		char buffer[32];
+		sprintf_s(buffer, "AES OpenCL %zi per group", m_group_size);
+		return buffer;
 	}
 
 	void AES::EncryptInPlace(std::string& input) const

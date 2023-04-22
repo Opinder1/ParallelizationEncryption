@@ -175,7 +175,7 @@ namespace des::v2
 	void RotateLeft1Bit(unsigned char* set, size_t bit_start, size_t bit_size)
 	{
 		// First byte that we are modifying
-		unsigned char byte_start = bit_start / 8;
+		unsigned char byte_start = unsigned char(bit_start / 8);
 
 		// First bit of first byte we are modifying
 		unsigned char start_bit_index = bit_start % 8;
@@ -398,6 +398,11 @@ namespace des::v2
 
 	}
 
+	std::string DES::GetName() const
+	{
+		return "DES v2";
+	}
+
 	void DES::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
@@ -436,6 +441,11 @@ namespace des::v2
 		{
 			throw Exception{};
 		}
+	}
+
+	std::string DESParallel::GetName() const
+	{
+		return "DES v2 16 threads";
 	}
 
 	void DESParallel::EncryptInPlace(std::string& input) const

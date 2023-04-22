@@ -9,6 +9,8 @@ public:
 
 	std::string GetKey() const { return m_key; }
 
+	virtual std::string GetName() const = 0;
+
 	virtual void EncryptInPlace(std::string& input) const = 0;
 
 	virtual void DecryptInPlace(std::string& input) const = 0;

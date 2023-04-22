@@ -26,6 +26,8 @@ namespace aes::v3
 
 		CPU_API ~AES();
 
+		CPU_API std::string GetName() const override;
+
 		CPU_API void EncryptInPlace(std::string& input) const override;
 
 		CPU_API void DecryptInPlace(std::string& input) const override;
@@ -49,10 +51,16 @@ namespace aes::v3
 	class AESParallel : public AES
 	{
 	public:
-		CPU_API AESParallel(const std::string& key, size_t group_size = 1);
+		CPU_API AESParallel(const std::string& key, size_t group_size = 1, size_t thread_count = 16);
+
+		CPU_API std::string GetName() const override;
 
 		CPU_API void EncryptInPlace(std::string& input) const override;
 
 		CPU_API void DecryptInPlace(std::string& input) const override;
+
+	private:
+		size_t m_group_size;
+		int m_thread_count;
 	};
 }

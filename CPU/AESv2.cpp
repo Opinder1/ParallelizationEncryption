@@ -320,6 +320,11 @@ namespace aes::v2
 
 	}
 
+	std::string AES::GetName() const
+	{
+		return "AES v2";
+	}
+
 	void AES::AddRoundKey(unsigned char state[16], size_t index) const
 	{
 		const unsigned char* key_bytes = (const unsigned char*)m_subkeys[index].bytes;
@@ -463,6 +468,11 @@ namespace aes::v2
 		{
 			throw Exception{};
 		}
+	}
+
+	std::string AESParallel::GetName() const
+	{
+		return "AES v1 16 threads";
 	}
 
 	void AESParallel::EncryptInPlace(std::string& input) const

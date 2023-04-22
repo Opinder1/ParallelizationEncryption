@@ -27,6 +27,8 @@ namespace mbed
 
 		CPU_API static int Test();
 
+		CPU_API std::string GetName() const override;
+
 		CPU_API void EncryptInPlace(std::string& input) const override;
 
 		CPU_API void DecryptInPlace(std::string& input) const override;
@@ -40,6 +42,8 @@ namespace mbed
 	{
 	public:
 		CPU_API DESParallel(const std::string& key, size_t group_size = 1);
+
+		CPU_API std::string GetName() const override;
 
 		CPU_API void EncryptInPlace(std::string& input) const override;
 
@@ -59,6 +63,8 @@ namespace mbed
 
 		CPU_API ~TripleDES();
 
+		CPU_API std::string GetName() const override;
+
 		CPU_API void EncryptInPlace(std::string& input) const override;
 
 		CPU_API void DecryptInPlace(std::string& input) const override;
@@ -72,6 +78,8 @@ namespace mbed
 	{
 	public:
 		CPU_API TripleDESParallel(const std::string& key, size_t group_size = 1);
+
+		CPU_API std::string GetName() const override;
 
 		CPU_API void EncryptInPlace(std::string& input) const override;
 
@@ -93,6 +101,8 @@ namespace mbed
 
 		CPU_API static int Test();
 
+		CPU_API std::string GetName() const override;
+
 		CPU_API void EncryptInPlace(std::string& input) const override;
 
 		CPU_API void DecryptInPlace(std::string& input) const override;
@@ -105,6 +115,8 @@ namespace mbed
 	{
 	public:
 		CPU_API AESParallel(const std::string& key, size_t group_size = 1);
+
+		CPU_API std::string GetName() const override;
 
 		CPU_API void EncryptInPlace(std::string& input) const override;
 

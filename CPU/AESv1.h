@@ -31,9 +31,11 @@ namespace aes::v1
 
 		CPU_API ~AES();
 
-		void CPU_API EncryptInPlace(std::string& input) const override;
+		CPU_API std::string GetName() const override;
 
-		void CPU_API DecryptInPlace(std::string& input) const override;
+		CPU_API void EncryptInPlace(std::string& input) const override;
+
+		CPU_API void DecryptInPlace(std::string& input) const override;
 
 	protected:
 		void EncryptBlock(char block[16]) const;
@@ -66,6 +68,8 @@ namespace aes::v1
 	{
 	public:
 		CPU_API AESParallel(const std::string& key, size_t group_size = 1);
+
+		CPU_API std::string GetName() const override;
 
 		CPU_API void EncryptInPlace(std::string& input) const override;
 

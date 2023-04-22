@@ -67,7 +67,7 @@ namespace opencl::des
 	void RotateLeft1Bit(unsigned char* set, size_t bit_start, size_t bit_size)
 	{
 		// First byte that we are modifying
-		unsigned char byte_start = bit_start / 8;
+		unsigned char byte_start = unsigned char(bit_start / 8);
 
 		// First bit of first byte we are modifying
 		unsigned char start_bit_index = bit_start % 8;
@@ -156,115 +156,12 @@ namespace opencl::des
 		}
 	}
 
-	DES::DES(const std::string& key, size_t group_size) :
-		EncryptBase(key),
-		m_program("des.cl"),
-		m_enc_id(m_program.MakeFunction("crypt")),
-		m_dec_id(m_program.MakeFunction("crypt"))
-	{
-		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
-		{
-			throw Exception{};
-		}
-
-		if (key.size() != k_min_key_size)
-		{
-			throw Exception{};
-		}
-
-		unsigned char subkeys[192] = { 0 };
-
-		unsigned char* enc_subkeys = subkeys;
-		unsigned char* dec_subkeys = subkeys + (6 * 16) + (6 * 15);
-
-		unsigned char temp[7] = { 0 };
-		Permute((const unsigned char*)key.data(), temp, key_perm_l, key_perm_r, 56);
-
-		for (size_t i = 0; i < 16; i++)
-		{
-			switch (i)
-			{
-			case 0:
-			case 1:
-			case 8:
-			case 15:
-				RotateLeft1Bit(temp, 0, 28);
-				RotateLeft1Bit(temp, 28, 28);
-				break;
-
-			default:
-				RotateLeft2Bit(temp, 0, 28);
-				RotateLeft2Bit(temp, 28, 28);
-				break;
-			}
-
-			Permute(temp, enc_subkeys, left_round_perm_l, left_round_perm_r, 24);
-
-			Permute(temp, enc_subkeys + 3, right_round_perm_l, right_round_perm_r, 24);
-
-			Permute(temp, dec_subkeys, left_round_perm_l, left_round_perm_r, 24);
-
-			Permute(temp, dec_subkeys + 3, right_round_perm_l, right_round_perm_r, 24);
-
-			enc_subkeys += 6;
-			dec_subkeys -= 6;
-		}
-
-		m_program.AddArg<ArrayInput>(m_enc_id);
-		m_program.AddArg<IntInput>(m_enc_id);
-		m_program.AddArg<ArrayIO>(m_enc_id);
-
-		m_program.UpdateArg<ArrayInput>(m_enc_id, 0, [&](auto& arg) {arg.SetData(subkeys, 96); });
-
-		m_program.AddArg<ArrayInput>(m_dec_id);
-		m_program.AddArg<IntInput>(m_dec_id);
-		m_program.AddArg<ArrayIO>(m_dec_id);
-
-		m_program.UpdateArg<ArrayInput>(m_dec_id, 0, [&](auto& arg) {arg.SetData(subkeys + 96, 96); });
-	}
-
-	DES::~DES()
-	{
-
-	}
-
-	void DES::EncryptInPlace(std::string& input) const
-	{
-		if (input.size() == 0 || input.size() % k_block_size != 0)
-		{
-			throw Exception{};
-		}
-
-		m_program.UpdateArg<ArrayIO>(m_enc_id, 2, [&](auto& arg) { arg.SetData(input.data(), input.size()); });
-
-		unsigned int num = (unsigned int)input.size() / k_block_size;
-
-		m_program.UpdateArg<IntInput>(m_enc_id, 1, [&](auto& arg) { arg.SetData(m_rounds); });
-
-		m_program.RunFunction(m_enc_id, num);
-	}
-
-	void DES::DecryptInPlace(std::string& input) const
-	{
-		if (input.size() == 0 || input.size() % k_block_size != 0)
-		{
-			throw Exception{};
-		}
-
-		m_program.UpdateArg<ArrayIO>(m_dec_id, 2, [&](auto& arg) { arg.SetData(input.data(), input.size()); });
-
-		unsigned int num = (unsigned int)input.size() / k_block_size;
-
-		m_program.UpdateArg<IntInput>(m_dec_id, 1, [&](auto& arg) { arg.SetData(m_rounds); });
-
-		m_program.RunFunction(m_dec_id, num);
-	}
-
 	TripleDES::TripleDES(const std::string& key, size_t group_size) :
 		EncryptBase(key),
 		m_program("des.cl"),
 		m_enc_id(m_program.MakeFunction("triplecrypt")),
-		m_dec_id(m_program.MakeFunction("triplecrypt"))
+		m_dec_id(m_program.MakeFunction("triplecrypt")),
+		m_group_size(group_size)
 	{
 		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
 		{
@@ -321,13 +218,11 @@ namespace opencl::des
 		}
 
 		m_program.AddArg<ArrayInput>(m_enc_id);
-		m_program.AddArg<IntInput>(m_enc_id);
 		m_program.AddArg<ArrayIO>(m_enc_id);
 
 		m_program.UpdateArg<ArrayInput>(m_enc_id, 0, [&](auto& arg) {arg.SetData(subkeys, 96 * 3); });
 
 		m_program.AddArg<ArrayInput>(m_dec_id);
-		m_program.AddArg<IntInput>(m_dec_id);
 		m_program.AddArg<ArrayIO>(m_dec_id);
 
 		m_program.UpdateArg<ArrayInput>(m_dec_id, 0, [&](auto& arg) {arg.SetData(subkeys[3], 96 * 3); });
@@ -338,6 +233,13 @@ namespace opencl::des
 
 	}
 
+	std::string TripleDES::GetName() const
+	{
+		char buffer[48];
+		sprintf_s(buffer, "Triple DES OpenCL %zi per group", m_group_size);
+		return buffer;
+	}
+
 	void TripleDES::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
@@ -345,11 +247,9 @@ namespace opencl::des
 			throw Exception{};
 		}
 
-		m_program.UpdateArg<ArrayIO>(m_enc_id, 2, [&](auto& arg) { arg.SetData(input.data(), input.size()); });
+		m_program.UpdateArg<ArrayIO>(m_enc_id, 1, [&](auto& arg) { arg.SetData(input.data(), input.size()); });
 
 		unsigned int num = (unsigned int)input.size() / k_block_size;
-
-		m_program.UpdateArg<IntInput>(m_enc_id, 1, [&](auto& arg) { arg.SetData(m_rounds); });
 
 		m_program.RunFunction(m_enc_id, num);
 	}
@@ -361,11 +261,9 @@ namespace opencl::des
 			throw Exception{};
 		}
 
-		m_program.UpdateArg<ArrayIO>(m_dec_id, 2, [&](auto& arg) { arg.SetData(input.data(), input.size()); });
+		m_program.UpdateArg<ArrayIO>(m_dec_id, 1, [&](auto& arg) { arg.SetData(input.data(), input.size()); });
 
 		unsigned int num = (unsigned int)input.size() / k_block_size;
-
-		m_program.UpdateArg<IntInput>(m_dec_id, 1, [&](auto& arg) { arg.SetData(m_rounds); });
 
 		m_program.RunFunction(m_dec_id, num);
 	}

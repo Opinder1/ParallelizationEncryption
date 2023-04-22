@@ -26,6 +26,8 @@ namespace cuda::aes
 
 		GPU_API ~AES();
 
+		GPU_API std::string GetName() const override;
+
 		GPU_API void EncryptInPlace(std::string& input) const override;
 
 		GPU_API void DecryptInPlace(std::string& input) const override;
@@ -34,5 +36,7 @@ namespace cuda::aes
 		unsigned int m_rounds;
 
 		unsigned char* m_subkeys;
+
+		size_t m_group_size;
 	};
 }

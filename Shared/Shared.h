@@ -2,8 +2,26 @@
 
 #include <string>
 #include <string_view>
-#include <chrono>
 #include <bitset>
+#include <chrono>
+
+template<class F, class... Args>
+inline double TimeFunc(size_t num, const F& function, Args&... args)
+{
+	auto t1 = std::chrono::steady_clock::now();
+
+	for (size_t i = 0; i < num; i++)
+	{
+		function(args...);
+	}
+
+	auto t2 = std::chrono::steady_clock::now();
+
+	auto time_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
+	auto time_sec = time_nano.count() / 1000000000.0;
+
+	return time_sec;
+}
 
 inline char ToLower(char input)
 {
@@ -228,4 +246,16 @@ std::string Format(const char* format, Args&&... args)
 	char buffer[256];
 	sprintf_s(buffer, format, std::forward<Args>(args)...);
 	return std::string(buffer);
+}
+
+inline int SizeToInt(size_t size)
+{
+	if (size > size_t(INT_MAX))
+	{
+		return int(INT_MAX);
+	}
+	else
+	{
+		return int(size);
+	}
 }

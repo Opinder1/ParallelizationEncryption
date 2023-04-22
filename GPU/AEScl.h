@@ -26,6 +26,8 @@ namespace opencl::aes
 
 		GPU_API ~AES();
 
+		GPU_API std::string GetName() const override;
+
 		GPU_API void EncryptInPlace(std::string& input) const override;
 
 		GPU_API void DecryptInPlace(std::string& input) const override;
@@ -37,5 +39,7 @@ namespace opencl::aes
 
 		Program::FunctionID m_enc_id;
 		Program::FunctionID m_dec_id;
+
+		size_t m_group_size;
 	};
 }

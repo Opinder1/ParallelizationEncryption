@@ -196,7 +196,7 @@ namespace cuda::des
 	void RotateLeft1Bit(unsigned char* set, size_t bit_start, size_t bit_size)
 	{
 		// First byte that we are modifying
-		unsigned char byte_start = bit_start / 8;
+		unsigned char byte_start = unsigned char(bit_start / 8);
 
 		// First bit of first byte we are modifying
 		unsigned char start_bit_index = bit_start % 8;
@@ -349,7 +349,7 @@ namespace cuda::des
 		}
 	}
 
-	__device__ void CryptBlock(const unsigned char* subkeys, unsigned int rounds, unsigned char* block)
+	__device__ void CryptBlock(const unsigned char* subkeys, unsigned char* block)
 	{
 		unsigned char temp[8] = { 0 };
 
@@ -409,173 +409,39 @@ namespace cuda::des
 		Permute(temp, block, final_perm_l, final_perm_r, 64);
 	}
 
-	__global__ void CryptBlocks(const unsigned char* subkeys, unsigned int rounds, unsigned char* block)
+	__global__ void CryptBlocks(const unsigned char* subkeys, unsigned char* block)
 	{
 		block += (threadIdx.x * 8);
 
-		CryptBlock(subkeys + (96 * 0), rounds, block);
+		CryptBlock(subkeys + (96 * 0), block);
 	}
 
-	__global__ void TripleCryptBlocks(const unsigned char* subkeys, unsigned int rounds, unsigned char* block)
+	__global__ void TripleCryptBlocksOld(const unsigned char* subkeys, unsigned char* block)
 	{
 		block += (threadIdx.x * 8);
 
-		CryptBlock(subkeys + (96 * 0), rounds, block);
-		CryptBlock(subkeys + (96 * 1), rounds, block);
-		CryptBlock(subkeys + (96 * 2), rounds, block);
+		CryptBlock(subkeys + (96 * 0), block);
+		CryptBlock(subkeys + (96 * 1), block);
+		CryptBlock(subkeys + (96 * 2), block);
 	}
 
-	DES::DES(const std::string& key, size_t group_size) :
-		EncryptBase(key)
+	__global__ void TripleCryptBlocks(const unsigned char* subkeys, unsigned char* block, unsigned int group_size, unsigned int num_blocks)
 	{
-		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
+		unsigned int group = threadIdx.x;
+		size_t group_start = group * group_size;
+		size_t group_end = __min(group_start + group_size, num_blocks);
+
+		for (size_t block_id = group_start; block_id < group_end; block_id++)
 		{
-			throw Exception{};
-		}
-
-		if (key.size() != k_min_key_size)
-		{
-			throw Exception{};
-		}
-
-		if (cudaSetDevice(0) != cudaSuccess)
-		{
-			fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
-			throw Exception{};
-		}
-
-		if (cudaMalloc(&m_subkeys, 192) != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMalloc failed!");
-			throw Exception{};
-		}
-
-		unsigned char subkeys[192] = {0};
-
-		unsigned char* enc_subkeys = subkeys;
-		unsigned char* dec_subkeys = subkeys + (6 * 16) + (6 * 15);
-
-		unsigned char temp[7] = {0};
-		Permute((const unsigned char*)key.data(), temp, key_perm_l, key_perm_r, 56);
-
-		for (size_t i = 0; i < 16; i++)
-		{
-			switch (i)
-			{
-			case 0:
-			case 1:
-			case 8:
-			case 15:
-				RotateLeft1Bit(temp, 0, 28);
-				RotateLeft1Bit(temp, 28, 28);
-				break;
-
-			default:
-				RotateLeft2Bit(temp, 0, 28);
-				RotateLeft2Bit(temp, 28, 28);
-				break;
-			}
-
-			Permute(temp, enc_subkeys, left_round_perm_l, left_round_perm_r, 24);
-
-			Permute(temp, enc_subkeys + 3, right_round_perm_l, right_round_perm_r, 24);
-
-			Permute(temp, dec_subkeys, left_round_perm_l, left_round_perm_r, 24);
-
-			Permute(temp, dec_subkeys + 3, right_round_perm_l, right_round_perm_r, 24);
-
-			enc_subkeys += 6;
-			dec_subkeys -= 6;
-		}
-
-		if (cudaMemcpy(m_subkeys, subkeys, 192, cudaMemcpyHostToDevice) != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMemcpy failed!");
-			throw Exception{};
-		}
-	}
-
-	DES::~DES()
-	{
-		cudaFree(m_subkeys);
-	}
-
-	void DES::EncryptInPlace(std::string& input) const
-	{
-		if (input.size() == 0 || input.size() % k_block_size != 0)
-		{
-			throw Exception{};
-		}
-
-		unsigned char* mem = 0;
-
-		if (cudaMalloc(&mem, input.size()) != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMalloc failed!");
-			throw Exception{};
-		}
-
-		if (cudaMemcpy(mem, input.data(), input.size(), cudaMemcpyHostToDevice) != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMemcpy failed!");
-			throw Exception{};
-		}
-
-		unsigned int num = (unsigned int)input.size() / k_block_size;
-		CryptBlocks<<<1, num>>>(m_subkeys, m_rounds, mem);
-
-		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMemcpy failed!");
-			throw Exception{};
-		}
-
-		if (cudaFree(mem) != cudaSuccess)
-		{
-			fprintf(stderr, "cudaFree failed!");
-			throw Exception{};
-		}
-	}
-
-	void DES::DecryptInPlace(std::string& input) const
-	{
-		if (input.size() == 0 || input.size() % k_block_size != 0)
-		{
-			throw Exception{};
-		}
-
-		unsigned char* mem = 0;
-
-		if (cudaMalloc(&mem, input.size()) != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMalloc failed!");
-			throw Exception{};
-		}
-
-		if (cudaMemcpy(mem, input.data(), input.size(), cudaMemcpyHostToDevice) != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMemcpy failed!");
-			throw Exception{};
-		}
-
-		unsigned int num = (unsigned int)input.size() / k_block_size;
-		CryptBlocks<<<1, num>>>(m_subkeys + 96, m_rounds, mem);
-
-		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMemcpy failed!");
-			throw Exception{};
-		}
-
-		if (cudaFree(mem) != cudaSuccess)
-		{
-			fprintf(stderr, "cudaFree failed!");
-			throw Exception{};
+			CryptBlock(subkeys + (96 * 0), block + (block_id * 8));
+			CryptBlock(subkeys + (96 * 1), block + (block_id * 8));
+			CryptBlock(subkeys + (96 * 2), block + (block_id * 8));
 		}
 	}
 
 	TripleDES::TripleDES(const std::string& key, size_t group_size) :
-		EncryptBase(key)
+		EncryptBase(key),
+		m_group_size(group_size)
 	{
 		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
 		{
@@ -655,6 +521,13 @@ namespace cuda::des
 		cudaFree(m_subkeys);
 	}
 
+	std::string TripleDES::GetName() const
+	{
+		char buffer[32];
+		sprintf_s(buffer, "Triple DES CPU %zi per group", m_group_size);
+		return buffer;
+	}
+
 	void TripleDES::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
@@ -676,8 +549,9 @@ namespace cuda::des
 			throw Exception{};
 		}
 
-		unsigned int num = (unsigned int)input.size() / k_block_size;
-		TripleCryptBlocks<<<1, num>>>(m_subkeys, m_rounds, mem);
+		unsigned int num_blocks = (unsigned int)input.size() / k_block_size;
+		unsigned int num_iterations = (num_blocks + m_group_size - 1) / m_group_size;
+		TripleCryptBlocks<<<1, num_iterations>>>(m_subkeys, mem, m_group_size, num_blocks);
 
 		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
 		{
@@ -713,8 +587,9 @@ namespace cuda::des
 			throw Exception{};
 		}
 
-		unsigned int num = (unsigned int)input.size() / k_block_size;
-		TripleCryptBlocks<<<1, num>>>(m_subkeys + (96 * 3), m_rounds, mem);
+		unsigned int num_blocks = (unsigned int)input.size() / k_block_size;
+		unsigned int num_iterations = (num_blocks + m_group_size - 1) / m_group_size;
+		TripleCryptBlocks<<<1, num_iterations>>>(m_subkeys + (96 * 3), mem, m_group_size, num_blocks);
 
 		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
 		{

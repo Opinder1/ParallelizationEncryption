@@ -1,5 +1,7 @@
 #include "AESv3.h"
 
+#include "../Shared/Shared.h"
+
 namespace aes::v3
 {
 	const unsigned char sbox2d[16][16] = {
@@ -332,6 +334,11 @@ namespace aes::v3
 
 	}
 
+	std::string AES::GetName() const
+	{
+		return "AES CPU 1 thread";
+	}
+
 	void AES::EncryptBlockECB(unsigned char block[16]) const
 	{
 		for (size_t i = 0; i < 4 * 4; i++)
@@ -479,9 +486,9 @@ namespace aes::v3
 			throw Exception{};
 		}
 
-		for (size_t i = 0; i < input.size(); i += 16)
+		for (size_t block = 0; block < input.size(); block += 16)
 		{
-			EncryptBlockCTR((unsigned char*)input.data() + i, i);
+			EncryptBlockCTR((unsigned char*)input.data() + block, block);
 		}
 	}
 
@@ -492,19 +499,28 @@ namespace aes::v3
 			throw Exception{};
 		}
 
-		for (size_t i = 0; i < input.size(); i += 16)
+		for (size_t block = 0; block < input.size(); block += 16)
 		{
-			DecryptBlockCTR((unsigned char*)input.data() + i, i);
+			DecryptBlockCTR((unsigned char*)input.data() + block, block);
 		}
 	}
 
-	AESParallel::AESParallel(const std::string& key, size_t group_size) :
-		AES(key)
+	AESParallel::AESParallel(const std::string& key, size_t group_size, size_t thread_count) :
+		AES(key),
+		m_group_size(group_size),
+		m_thread_count(SizeToInt(thread_count))
 	{
 		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
 		{
 			throw Exception{};
 		}
+	}
+
+	std::string AESParallel::GetName() const
+	{
+		char buffer[48];
+		sprintf_s(buffer, "AES CPU %i threads %zi per group", m_thread_count, m_group_size);
+		return buffer;
 	}
 
 	void AESParallel::EncryptInPlace(std::string& input) const
@@ -514,11 +530,20 @@ namespace aes::v3
 			throw Exception{};
 		}
 
-		int i;
-#pragma omp parallel for num_threads(16)
-		for (i = 0; i < input.size() / k_block_size; i += 16)
+		size_t num_blocks = input.size() / k_block_size;
+		size_t num_iterations = (num_blocks + m_group_size - 1) / m_group_size;
+
+		int group;
+#pragma omp parallel for num_threads(m_thread_count)
+		for (group = 0; group < num_iterations; group++)
 		{
-			EncryptBlockCTR((unsigned char*)input.data() + i, i);
+			size_t group_start = group * m_group_size;
+			size_t group_end = std::min(group_start + m_group_size, num_blocks);
+
+			for (size_t block = group_start; block < group_end; block++)
+			{
+				EncryptBlockCTR((unsigned char*)input.data() + block, block);
+			}
 		}
 	}
 
@@ -529,11 +554,20 @@ namespace aes::v3
 			throw Exception{};
 		}
 
-		int i;
-#pragma omp parallel for num_threads(16)
-		for (i = 0; i < input.size() / k_block_size; i += 16)
+		size_t num_blocks = input.size() / k_block_size;
+		size_t num_iterations = (num_blocks + m_group_size - 1) / m_group_size;
+
+		int group;
+#pragma omp parallel for num_threads(m_thread_count)
+		for (group = 0; group < num_iterations; group++)
 		{
-			DecryptBlockCTR((unsigned char*)input.data() + i, i);
+			size_t group_start = group * m_group_size;
+			size_t group_end = std::min(group_start + m_group_size, num_blocks);
+
+			for (size_t block = group_start; block < group_end; block++)
+			{
+				DecryptBlockCTR((unsigned char*)input.data() + block, block);
+			}
 		}
 	}
 }

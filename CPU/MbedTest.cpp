@@ -44,6 +44,11 @@ namespace mbed
 		mbedtls_des_free(&m_dec_ctx);
 	}
 
+	std::string DES::GetName() const
+	{
+		return "DES MbedTLS";
+	}
+
 	int DES::Test()
 	{
 		return mbedtls_des_self_test(1);
@@ -101,6 +106,11 @@ namespace mbed
 		{
 			throw Exception{};
 		}
+	}
+
+	std::string DESParallel::GetName() const
+	{
+		return "DES MbedTLS 16 threads";
 	}
 
 	void DESParallel::EncryptInPlace(std::string& input) const
@@ -177,6 +187,11 @@ namespace mbed
 		mbedtls_des3_free(&m_dec_ctx);
 	}
 
+	std::string TripleDES::GetName() const
+	{
+		return "Triple DES MbedTLS";
+	}
+
 	void TripleDES::EncryptInPlace(std::string& input) const
 	{
 		if (input.size() == 0 || input.size() % k_block_size != 0)
@@ -229,6 +244,11 @@ namespace mbed
 		{
 			throw Exception{};
 		}
+	}
+
+	std::string TripleDESParallel::GetName() const
+	{
+		return "Triple DES MbedTLS 16 threads";
 	}
 
 	void TripleDESParallel::EncryptInPlace(std::string& input) const
@@ -317,6 +337,11 @@ namespace mbed
 		mbedtls_aes_free(&m_ctx);
 	}
 
+	std::string AES::GetName() const
+	{
+		return "AES MbedTLS";
+	}
+
 	int AES::Test()
 	{
 		return mbedtls_aes_self_test(1);
@@ -372,6 +397,11 @@ namespace mbed
 		{
 			throw Exception{};
 		}
+	}
+
+	std::string AESParallel::GetName() const
+	{
+		return "AES MbedTLS 16 threads";
 	}
 
 	void AESParallel::EncryptInPlace(std::string& input) const
