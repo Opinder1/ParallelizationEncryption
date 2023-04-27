@@ -64,11 +64,11 @@ void TimeAndGraph(const char* name, const std::vector<EncryptBase*> algorithms, 
 	// Make a second graph with log axis
 	if (test.ShouldMakeLogGraph())
 	{
-		command2.append("pyplot.show();\"");
-
 		// Only apply log axis to one graph
 		command2.append("pyplot.xscale('log');");
 		command2.append("pyplot.yscale('log');");
+
+		command2.append("pyplot.show();\"");
 
 		system(command2.c_str());
 	}

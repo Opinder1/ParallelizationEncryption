@@ -25,17 +25,20 @@ void RunAllTests()
 	TestCrypt<aes::v2::AES>();
 	TestCrypt<aes::v3::AES>();
 
-	TestParallelCrypt<mbed::DESParallel>();
-	TestParallelCrypt<mbed::TripleDESParallel>();
-	TestParallelCrypt<mbed::AESParallel>();
-	TestParallelCrypt<des::v2::DESParallel>();
-	TestParallelCrypt<des::v3::DESParallel>();
-	TestParallelCrypt<aes::v1::AESParallel>();
-	TestParallelCrypt<aes::v2::AESParallel>();
-	TestParallelCrypt<aes::v3::AESParallel>();
+	TestCryptGroups<mbed::DESParallel>();
+	TestCryptGroups<mbed::TripleDESParallel>();
+	TestCryptGroups<mbed::AESParallel>();
+	TestCryptGroups<des::v2::DESParallel>();
+	TestCryptGroupsThreads<des::v3::DESParallel>();
+	TestCryptGroups<aes::v1::AESParallel>();
+	TestCryptGroups<aes::v2::AESParallel>();
+	TestCryptGroupsThreads<aes::v3::AESParallel>();
 
-	TestParallelCrypt<cuda::aes::AES>();
-	TestParallelCrypt<opencl::aes::AES>();
+	TestCrypt<cuda::aes::AES>();
+	TestCrypt<cuda::des::TripleDES>();
+
+	TestCrypt<opencl::aes::AES>();
+	TestCrypt<opencl::des::TripleDES>();
 
 	TestVersions<des::v3::DES, des::v3::DESParallel>();
 	TestVersions<des::v3::TripleDES, des::v3::TripleDESParallel, cuda::des::TripleDES, opencl::des::TripleDES>();
@@ -137,60 +140,64 @@ void RunAllAnalysis()
 
 	{
 		des::v3::TripleDES des1(deskey);
-		des::v3::TripleDESParallel des2(deskey, 1);
-		cuda::des::TripleDES des3(deskey, 1);
-		opencl::des::TripleDES des4(deskey, 1);
+		des::v3::TripleDESParallel des2(deskey, 1, 12);
+		cuda::des::TripleDES des3(deskey);
+		opencl::des::TripleDES des4(deskey);
 
 		aes::v3::AES aes1(aeskey);
-		aes::v3::AESParallel aes2(aeskey, 1);
-		cuda::aes::AES aes3(aeskey, 1);
-		opencl::aes::AES aes4(aeskey, 1);
+		aes::v3::AESParallel aes2(aeskey, 1, 12);
+		cuda::aes::AES aes3(aeskey);
+		opencl::aes::AES aes4(aeskey);
 
-		TimeAndGraph("DES", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(10, 20, true));
+		// Tests comparing different versions of Triple DES and AES
+		TimeAndGraph("TDES", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(10, 20, true));
 
 		TimeAndGraph("AES", { &aes1, &aes2, &aes3, &aes4 }, DataSizeSpeedsTest(10, 20, true));
 
-		TimeAndGraph("DES and AES", { &des3, &des4, &aes3, &aes4 }, DataSizeSpeedsTest(20, 20, true));
+		TimeAndGraph("TDES and AES", { &des3, &des4, &aes3, &aes4 }, DataSizeSpeedsTest(20, 20, true));
 
-		TimeAndGraph("DES overhead", { &des3, &des4 }, BytesPerSecondTest(10));
+		// Testing the bytes per second of the GPU versions. This shows to what extent the Memory transfer is a bottleneck
+		TimeAndGraph("TDES bytes per second", { &des3, &des4 }, BytesPerSecondTest(10));
 
-		TimeAndGraph("AES overhead", { &aes3, &aes4 }, BytesPerSecondTest(10));
+		TimeAndGraph("AES bytes per second", { &aes3, &aes4 }, BytesPerSecondTest(10));
 	}
 
+	// Testing encrypting blocks in groups
 	{
 		des::v3::TripleDESParallel des1(deskey, 1);
 		des::v3::TripleDESParallel des2(deskey, 4);
 		des::v3::TripleDESParallel des3(deskey, 16);
 		des::v3::TripleDESParallel des4(deskey, 64);
 
-		TimeAndGraph("DES CPU group size", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(10, 18, false));
+		TimeAndGraph("TDES CPU group size", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(10, 18, false));
 	}
 
 	{
-		cuda::des::TripleDES des1(deskey, 1);
-		cuda::des::TripleDES des2(deskey, 4);
-		cuda::des::TripleDES des3(deskey, 16);
-		cuda::des::TripleDES des4(deskey, 64);
+		aes::v3::AESParallel aes1(aeskey, 1);
+		aes::v3::AESParallel aes2(aeskey, 4);
+		aes::v3::AESParallel aes3(aeskey, 16);
+		aes::v3::AESParallel aes4(aeskey, 64);
 
-		TimeAndGraph("DES CUDA group size", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(10, 18, false));
+		TimeAndGraph("AES CPU group size", { &aes1, &aes2, &aes3, &aes4 }, DataSizeSpeedsTest(10, 18, false));
 	}
 
-	{
-		opencl::des::TripleDES des1(deskey, 1);
-		opencl::des::TripleDES des2(deskey, 4);
-		opencl::des::TripleDES des3(deskey, 16);
-		opencl::des::TripleDES des4(deskey, 64);
-
-		TimeAndGraph("DES OpenCL group size", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(10, 18, false));
-	}
-
+	// Testing encrypting with different CPU thread counts.
 	{
 		des::v3::TripleDESParallel des1(deskey, 1, 1);
 		des::v3::TripleDESParallel des2(deskey, 1, 2);
 		des::v3::TripleDESParallel des3(deskey, 1, 6);
 		des::v3::TripleDESParallel des4(deskey, 1, 12);
 
-		TimeAndGraph("DES CPU group size", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(10, 16, false));
+		TimeAndGraph("TDES CPU thread count", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(10, 16, false));
+	}
+
+	{
+		aes::v3::AESParallel aes1(aeskey, 1, 1);
+		aes::v3::AESParallel aes2(aeskey, 1, 2);
+		aes::v3::AESParallel aes3(aeskey, 1, 6);
+		aes::v3::AESParallel aes4(aeskey, 1, 12);
+
+		TimeAndGraph("AES CPU thread count", { &aes1, &aes2, &aes3, &aes4 }, DataSizeSpeedsTest(10, 16, false));
 	}
 }
 

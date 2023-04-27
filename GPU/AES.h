@@ -22,7 +22,7 @@ namespace cuda::aes
 			unsigned char bytes[8][4] = {};
 		};
 
-		GPU_API AES(const std::string& key, size_t group_size = 1);
+		GPU_API AES(const std::string& key);
 
 		GPU_API ~AES();
 
@@ -36,7 +36,5 @@ namespace cuda::aes
 		unsigned int m_rounds;
 
 		unsigned char* m_subkeys;
-
-		size_t m_group_size;
 	};
 }

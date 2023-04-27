@@ -38,12 +38,11 @@ void TestCrypt()
 		TestDecrypt(algorithmn, T::k_block_size);
 	}
 
-	printf("%s passed ", T(std::string(T::k_min_key_size, 'A')).GetName().c_str());
 	printf("%s passed\n", typeid(T).name());
 }
 
 template<class T>
-void TestParallelCrypt()
+void TestCryptGroups()
 {
 	const std::string key = std::string(T::k_min_key_size, 'A');
 
@@ -59,6 +58,25 @@ void TestParallelCrypt()
 	}
 
 	TestCrypt<T>();
+}
+
+template<class T>
+void TestCryptGroupsThreads()
+{
+	const std::string key = std::string(T::k_min_key_size, 'A');
+
+	// Test thread_count
+	{
+		EXPECT_NO_THROW(T(key, 1, 0), typename T::Exception);
+
+		EXPECT_NO_THROW(T(key, 1, 1));
+
+		EXPECT_NO_THROW(T(key, 1, 17));
+
+		EXPECT_NO_THROW(T(key, 1, SIZE_MAX), typename T::Exception);
+	}
+
+	TestCryptGroups<T>();
 }
 
 template<class Main, class... Others>

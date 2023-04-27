@@ -51,7 +51,7 @@ namespace aes::v3
 	class AESParallel : public AES
 	{
 	public:
-		CPU_API AESParallel(const std::string& key, size_t group_size = 1, size_t thread_count = 16);
+		CPU_API AESParallel(const std::string& key, size_t group_size = 1, size_t thread_count = 1);
 
 		CPU_API std::string GetName() const override;
 

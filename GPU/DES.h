@@ -21,7 +21,7 @@ namespace cuda::des
 			unsigned char bytes[8][4] = {};
 		};
 
-		GPU_API TripleDES(const std::string& key, size_t group_size = 1);
+		GPU_API TripleDES(const std::string& key);
 
 		GPU_API ~TripleDES();
 
@@ -33,7 +33,5 @@ namespace cuda::des
 
 	private:
 		unsigned char* m_subkeys;
-
-		size_t m_group_size;
 	};
 }

@@ -2,8 +2,12 @@
 
 #include "../Shared/Shared.h"
 
+#include <thread>
+
 namespace aes::v3
 {
+	const unsigned int hardware_core_count = std::thread::hardware_concurrency();
+
 	const unsigned char sbox2d[16][16] = {
 		{0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76},
 		{0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0},
@@ -513,6 +517,16 @@ namespace aes::v3
 		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
 		{
 			throw Exception{};
+		}
+
+		if (thread_count == 0)
+		{
+			thread_count = 1;
+		}
+
+		if (thread_count > hardware_core_count)
+		{
+			thread_count = hardware_core_count;
 		}
 	}
 

@@ -22,7 +22,7 @@ namespace opencl::aes
 			unsigned char bytes[8][4] = {};
 		};
 
-		GPU_API AES(const std::string& key, size_t group_size = 1);
+		GPU_API AES(const std::string& key);
 
 		GPU_API ~AES();
 
@@ -39,7 +39,5 @@ namespace opencl::aes
 
 		Program::FunctionID m_enc_id;
 		Program::FunctionID m_dec_id;
-
-		size_t m_group_size;
 	};
 }

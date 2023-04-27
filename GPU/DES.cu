@@ -416,7 +416,7 @@ namespace cuda::des
 		CryptBlock(subkeys + (96 * 0), block);
 	}
 
-	__global__ void TripleCryptBlocksOld(const unsigned char* subkeys, unsigned char* block)
+	__global__ void TripleCryptBlocks(const unsigned char* subkeys, unsigned char* block)
 	{
 		block += (threadIdx.x * 8);
 
@@ -425,29 +425,9 @@ namespace cuda::des
 		CryptBlock(subkeys + (96 * 2), block);
 	}
 
-	__global__ void TripleCryptBlocks(const unsigned char* subkeys, unsigned char* block, unsigned int group_size, unsigned int num_blocks)
+	TripleDES::TripleDES(const std::string& key) :
+		EncryptBase(key)
 	{
-		unsigned int group = threadIdx.x;
-		size_t group_start = group * group_size;
-		size_t group_end = __min(group_start + group_size, num_blocks);
-
-		for (size_t block_id = group_start; block_id < group_end; block_id++)
-		{
-			CryptBlock(subkeys + (96 * 0), block + (block_id * 8));
-			CryptBlock(subkeys + (96 * 1), block + (block_id * 8));
-			CryptBlock(subkeys + (96 * 2), block + (block_id * 8));
-		}
-	}
-
-	TripleDES::TripleDES(const std::string& key, size_t group_size) :
-		EncryptBase(key),
-		m_group_size(group_size)
-	{
-		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
-		{
-			throw Exception{};
-		}
-
 		if (key.size() != k_min_key_size)
 		{
 			throw Exception{};
@@ -523,8 +503,8 @@ namespace cuda::des
 
 	std::string TripleDES::GetName() const
 	{
-		char buffer[32];
-		sprintf_s(buffer, "Triple DES CPU %zi per group", m_group_size);
+		char buffer[16];
+		sprintf_s(buffer, "Triple DES CPU");
 		return buffer;
 	}
 
@@ -549,9 +529,8 @@ namespace cuda::des
 			throw Exception{};
 		}
 
-		unsigned int num_blocks = (unsigned int)input.size() / k_block_size;
-		unsigned int num_iterations = (num_blocks + m_group_size - 1) / m_group_size;
-		TripleCryptBlocks<<<1, num_iterations>>>(m_subkeys, mem, m_group_size, num_blocks);
+		unsigned int num = (unsigned int)input.size() / k_block_size;
+		TripleCryptBlocks<<<1, num>>>(m_subkeys, mem);
 
 		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
 		{
@@ -587,9 +566,8 @@ namespace cuda::des
 			throw Exception{};
 		}
 
-		unsigned int num_blocks = (unsigned int)input.size() / k_block_size;
-		unsigned int num_iterations = (num_blocks + m_group_size - 1) / m_group_size;
-		TripleCryptBlocks<<<1, num_iterations>>>(m_subkeys + (96 * 3), mem, m_group_size, num_blocks);
+		unsigned int num = (unsigned int)input.size() / k_block_size;
+		TripleCryptBlocks<<<1, num>>>(m_subkeys + (96 * 3), mem);
 
 		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
 		{

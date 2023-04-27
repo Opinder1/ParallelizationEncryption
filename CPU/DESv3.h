@@ -40,7 +40,7 @@ namespace des::v3
 	class DESParallel : public DES
 	{
 	public:
-		CPU_API DESParallel(const std::string& key, size_t group_size = 1, size_t thread_count = 16);
+		CPU_API DESParallel(const std::string& key, size_t group_size = 1, size_t thread_count = 1);
 
 		CPU_API std::string GetName() const override;
 
@@ -88,7 +88,7 @@ namespace des::v3
 	class TripleDESParallel : public TripleDES
 	{
 	public:
-		CPU_API TripleDESParallel(const std::string& key, size_t group_size = 1, size_t thread_count = 16);
+		CPU_API TripleDESParallel(const std::string& key, size_t group_size = 1, size_t thread_count = 1);
 
 		CPU_API std::string GetName() const override;
 

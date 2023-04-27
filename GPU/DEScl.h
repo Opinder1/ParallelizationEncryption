@@ -22,7 +22,7 @@ namespace opencl::des
 			unsigned char bytes[8][4] = {};
 		};
 
-		GPU_API TripleDES(const std::string& key, size_t group_size = 1);
+		GPU_API TripleDES(const std::string& key);
 
 		GPU_API ~TripleDES();
 
@@ -37,7 +37,5 @@ namespace opencl::des
 
 		Program::FunctionID m_enc_id;
 		Program::FunctionID m_dec_id;
-
-		size_t m_group_size;
 	};
 }

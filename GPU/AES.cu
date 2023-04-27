@@ -447,15 +447,9 @@ namespace cuda::aes
 		}
 	}
 
-	AES::AES(const std::string& key, size_t group_size) :
-		EncryptBase(key),
-		m_group_size(group_size)
+	AES::AES(const std::string& key) :
+		EncryptBase(key)
 	{
-		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
-		{
-			throw Exception{};
-		}
-
 		if (cudaSetDevice(0) != cudaSuccess)
 		{
 			fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
@@ -508,8 +502,8 @@ namespace cuda::aes
 
 	std::string AES::GetName() const
 	{
-		char buffer[32];
-		sprintf_s(buffer, "AES CUDA %zi per group", m_group_size);
+		char buffer[16];
+		sprintf_s(buffer, "AES CUDA");
 		return buffer;
 	}
 

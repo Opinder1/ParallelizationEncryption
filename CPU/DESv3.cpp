@@ -3,165 +3,168 @@
 #include "../Shared/Shared.h"
 
 #include <array>
-
-template<size_t S>
-std::array<unsigned char, S> Left1(const unsigned char(&data)[S])
-{
-	std::array<unsigned char, S> array;
-
-	const unsigned char* from_ptr = data + S - 8;
-	unsigned char* to_ptr = array.data();
-
-	for (size_t i = 0; i < S / 8; i++)
-	{
-		to_ptr[0] = from_ptr[0] / 8;
-		to_ptr[1] = from_ptr[1] / 8;
-		to_ptr[2] = from_ptr[2] / 8;
-		to_ptr[3] = from_ptr[3] / 8;
-		to_ptr[4] = from_ptr[4] / 8;
-		to_ptr[5] = from_ptr[5] / 8;
-		to_ptr[6] = from_ptr[6] / 8;
-		to_ptr[7] = from_ptr[7] / 8;
-
-		from_ptr -= 8;
-		to_ptr += 8;
-	}
-
-	return array;
-}
-
-template<size_t S>
-std::array<unsigned char, S> Right1(const unsigned char(&data)[S])
-{
-	std::array<unsigned char, S> array;
-
-	const unsigned char* from_ptr = data + S - 8;
-	unsigned char* to_ptr = array.data();
-
-	for (size_t i = 0; i < S / 8; i++)
-	{
-		to_ptr[0] = 1 << (7 - (from_ptr[0] % 8));
-		to_ptr[1] = 1 << (7 - (from_ptr[1] % 8));
-		to_ptr[2] = 1 << (7 - (from_ptr[2] % 8));
-		to_ptr[3] = 1 << (7 - (from_ptr[3] % 8));
-		to_ptr[4] = 1 << (7 - (from_ptr[4] % 8));
-		to_ptr[5] = 1 << (7 - (from_ptr[5] % 8));
-		to_ptr[6] = 1 << (7 - (from_ptr[6] % 8));
-		to_ptr[7] = 1 << (7 - (from_ptr[7] % 8));
-
-		from_ptr -= 8;
-		to_ptr += 8;
-	}
-
-	return array;
-}
-
-template<size_t S>
-std::array<unsigned char, S> Left2(const unsigned char(&data)[S])
-{
-	std::array<unsigned char, S> array;
-
-	const unsigned char* from_ptr = data + S - 8;
-	unsigned char* to_ptr = array.data();
-
-	for (size_t i = 0; i < S / 8; i++)
-	{
-		to_ptr[0] = from_ptr[7] / 8;
-		to_ptr[1] = from_ptr[6] / 8;
-		to_ptr[2] = from_ptr[5] / 8;
-		to_ptr[3] = from_ptr[4] / 8;
-		to_ptr[4] = from_ptr[3] / 8;
-		to_ptr[5] = from_ptr[2] / 8;
-		to_ptr[6] = from_ptr[1] / 8;
-		to_ptr[7] = from_ptr[0] / 8;
-
-		from_ptr -= 8;
-		to_ptr += 8;
-	}
-
-	return array;
-}
-
-template<size_t S>
-std::array<unsigned char, S> Right2(const unsigned char(&data)[S])
-{
-	std::array<unsigned char, S> array;
-
-	const unsigned char* from_ptr = data + S - 8;
-	unsigned char* to_ptr = array.data();
-
-	for (size_t i = 0; i < S / 8; i++)
-	{
-		to_ptr[0] = 1 << (from_ptr[7] % 8);
-		to_ptr[1] = 1 << (from_ptr[6] % 8);
-		to_ptr[2] = 1 << (from_ptr[5] % 8);
-		to_ptr[3] = 1 << (from_ptr[4] % 8);
-		to_ptr[4] = 1 << (from_ptr[3] % 8);
-		to_ptr[5] = 1 << (from_ptr[2] % 8);
-		to_ptr[6] = 1 << (from_ptr[1] % 8);
-		to_ptr[7] = 1 << (from_ptr[0] % 8);
-
-		from_ptr -= 8;
-		to_ptr += 8;
-	}
-
-	return array;
-}
-
-template<size_t S>
-std::array<unsigned char, S> Left3(const unsigned char(&data)[S])
-{
-	std::array<unsigned char, S> array;
-
-	const unsigned char* from_ptr = data;
-	unsigned char* to_ptr = array.data();
-
-	for (size_t i = 0; i < S / 8; i++)
-	{
-		to_ptr[0] = from_ptr[7] / 8;
-		to_ptr[1] = from_ptr[6] / 8;
-		to_ptr[2] = from_ptr[5] / 8;
-		to_ptr[3] = from_ptr[4] / 8;
-		to_ptr[4] = from_ptr[3] / 8;
-		to_ptr[5] = from_ptr[2] / 8;
-		to_ptr[6] = from_ptr[1] / 8;
-		to_ptr[7] = from_ptr[0] / 8;
-
-		from_ptr += 8;
-		to_ptr += 8;
-	}
-
-	return array;
-}
-
-template<size_t S>
-std::array<unsigned char, S> Right3(const unsigned char(&data)[S])
-{
-	std::array<unsigned char, S> array;
-
-	const unsigned char* from_ptr = data;
-	unsigned char* to_ptr = array.data();
-
-	for (size_t i = 0; i < S / 8; i++)
-	{
-		to_ptr[0] = 1 << (7 - (from_ptr[7] % 8));
-		to_ptr[1] = 1 << (7 - (from_ptr[6] % 8));
-		to_ptr[2] = 1 << (7 - (from_ptr[5] % 8));
-		to_ptr[3] = 1 << (7 - (from_ptr[4] % 8));
-		to_ptr[4] = 1 << (7 - (from_ptr[3] % 8));
-		to_ptr[5] = 1 << (7 - (from_ptr[2] % 8));
-		to_ptr[6] = 1 << (7 - (from_ptr[1] % 8));
-		to_ptr[7] = 1 << (7 - (from_ptr[0] % 8));
-
-		from_ptr += 8;
-		to_ptr += 8;
-	}
-
-	return array;
-}
+#include <thread>
 
 namespace des::v3
 {
+	const unsigned int hardware_core_count = std::thread::hardware_concurrency();
+
+	template<size_t S>
+	std::array<unsigned char, S> Left1(const unsigned char(&data)[S])
+	{
+		std::array<unsigned char, S> array;
+
+		const unsigned char* from_ptr = data + S - 8;
+		unsigned char* to_ptr = array.data();
+
+		for (size_t i = 0; i < S / 8; i++)
+		{
+			to_ptr[0] = from_ptr[0] / 8;
+			to_ptr[1] = from_ptr[1] / 8;
+			to_ptr[2] = from_ptr[2] / 8;
+			to_ptr[3] = from_ptr[3] / 8;
+			to_ptr[4] = from_ptr[4] / 8;
+			to_ptr[5] = from_ptr[5] / 8;
+			to_ptr[6] = from_ptr[6] / 8;
+			to_ptr[7] = from_ptr[7] / 8;
+
+			from_ptr -= 8;
+			to_ptr += 8;
+		}
+
+		return array;
+	}
+
+	template<size_t S>
+	std::array<unsigned char, S> Right1(const unsigned char(&data)[S])
+	{
+		std::array<unsigned char, S> array;
+
+		const unsigned char* from_ptr = data + S - 8;
+		unsigned char* to_ptr = array.data();
+
+		for (size_t i = 0; i < S / 8; i++)
+		{
+			to_ptr[0] = 1 << (7 - (from_ptr[0] % 8));
+			to_ptr[1] = 1 << (7 - (from_ptr[1] % 8));
+			to_ptr[2] = 1 << (7 - (from_ptr[2] % 8));
+			to_ptr[3] = 1 << (7 - (from_ptr[3] % 8));
+			to_ptr[4] = 1 << (7 - (from_ptr[4] % 8));
+			to_ptr[5] = 1 << (7 - (from_ptr[5] % 8));
+			to_ptr[6] = 1 << (7 - (from_ptr[6] % 8));
+			to_ptr[7] = 1 << (7 - (from_ptr[7] % 8));
+
+			from_ptr -= 8;
+			to_ptr += 8;
+		}
+
+		return array;
+	}
+
+	template<size_t S>
+	std::array<unsigned char, S> Left2(const unsigned char(&data)[S])
+	{
+		std::array<unsigned char, S> array;
+
+		const unsigned char* from_ptr = data + S - 8;
+		unsigned char* to_ptr = array.data();
+
+		for (size_t i = 0; i < S / 8; i++)
+		{
+			to_ptr[0] = from_ptr[7] / 8;
+			to_ptr[1] = from_ptr[6] / 8;
+			to_ptr[2] = from_ptr[5] / 8;
+			to_ptr[3] = from_ptr[4] / 8;
+			to_ptr[4] = from_ptr[3] / 8;
+			to_ptr[5] = from_ptr[2] / 8;
+			to_ptr[6] = from_ptr[1] / 8;
+			to_ptr[7] = from_ptr[0] / 8;
+
+			from_ptr -= 8;
+			to_ptr += 8;
+		}
+
+		return array;
+	}
+
+	template<size_t S>
+	std::array<unsigned char, S> Right2(const unsigned char(&data)[S])
+	{
+		std::array<unsigned char, S> array;
+
+		const unsigned char* from_ptr = data + S - 8;
+		unsigned char* to_ptr = array.data();
+
+		for (size_t i = 0; i < S / 8; i++)
+		{
+			to_ptr[0] = 1 << (from_ptr[7] % 8);
+			to_ptr[1] = 1 << (from_ptr[6] % 8);
+			to_ptr[2] = 1 << (from_ptr[5] % 8);
+			to_ptr[3] = 1 << (from_ptr[4] % 8);
+			to_ptr[4] = 1 << (from_ptr[3] % 8);
+			to_ptr[5] = 1 << (from_ptr[2] % 8);
+			to_ptr[6] = 1 << (from_ptr[1] % 8);
+			to_ptr[7] = 1 << (from_ptr[0] % 8);
+
+			from_ptr -= 8;
+			to_ptr += 8;
+		}
+
+		return array;
+	}
+
+	template<size_t S>
+	std::array<unsigned char, S> Left3(const unsigned char(&data)[S])
+	{
+		std::array<unsigned char, S> array;
+
+		const unsigned char* from_ptr = data;
+		unsigned char* to_ptr = array.data();
+
+		for (size_t i = 0; i < S / 8; i++)
+		{
+			to_ptr[0] = from_ptr[7] / 8;
+			to_ptr[1] = from_ptr[6] / 8;
+			to_ptr[2] = from_ptr[5] / 8;
+			to_ptr[3] = from_ptr[4] / 8;
+			to_ptr[4] = from_ptr[3] / 8;
+			to_ptr[5] = from_ptr[2] / 8;
+			to_ptr[6] = from_ptr[1] / 8;
+			to_ptr[7] = from_ptr[0] / 8;
+
+			from_ptr += 8;
+			to_ptr += 8;
+		}
+
+		return array;
+	}
+
+	template<size_t S>
+	std::array<unsigned char, S> Right3(const unsigned char(&data)[S])
+	{
+		std::array<unsigned char, S> array;
+
+		const unsigned char* from_ptr = data;
+		unsigned char* to_ptr = array.data();
+
+		for (size_t i = 0; i < S / 8; i++)
+		{
+			to_ptr[0] = 1 << (7 - (from_ptr[7] % 8));
+			to_ptr[1] = 1 << (7 - (from_ptr[6] % 8));
+			to_ptr[2] = 1 << (7 - (from_ptr[5] % 8));
+			to_ptr[3] = 1 << (7 - (from_ptr[4] % 8));
+			to_ptr[4] = 1 << (7 - (from_ptr[3] % 8));
+			to_ptr[5] = 1 << (7 - (from_ptr[2] % 8));
+			to_ptr[6] = 1 << (7 - (from_ptr[1] % 8));
+			to_ptr[7] = 1 << (7 - (from_ptr[0] % 8));
+
+			from_ptr += 8;
+			to_ptr += 8;
+		}
+
+		return array;
+	}
+
 	unsigned char key_perm[56] = {
 		56, 48, 40, 32, 24, 16, 8,	0,
 		57, 49, 41, 33, 25, 17, 9,	1,
@@ -603,12 +606,22 @@ namespace des::v3
 		{
 			throw Exception{};
 		}
+
+		if (thread_count == 0)
+		{
+			thread_count = 1;
+		}
+
+		if (thread_count > hardware_core_count)
+		{
+			thread_count = hardware_core_count;
+		}
 	}
 
 	std::string DESParallel::GetName() const
 	{
 		char buffer[48];
-		sprintf_s(buffer, "AES CPU %i threads %zi per group", m_thread_count, m_group_size);
+		sprintf_s(buffer, "Triple DES CPU %i threads %zi per group", m_thread_count, m_group_size);
 		return buffer;
 	}
 
@@ -735,12 +748,22 @@ namespace des::v3
 		{
 			throw Exception{};
 		}
+
+		if (thread_count == 0)
+		{
+			thread_count = 1;
+		}
+
+		if (thread_count > hardware_core_count)
+		{
+			thread_count = hardware_core_count;
+		}
 	}
 
 	std::string TripleDESParallel::GetName() const
 	{
 		char buffer[48];
-		sprintf_s(buffer, "AES CPU %i threads %zi per group", m_thread_count, m_group_size);
+		sprintf_s(buffer, "Triple DES CPU %i threads %zi per group", m_thread_count, m_group_size);
 		return buffer;
 	}
 

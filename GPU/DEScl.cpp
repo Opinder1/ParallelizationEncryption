@@ -156,18 +156,12 @@ namespace opencl::des
 		}
 	}
 
-	TripleDES::TripleDES(const std::string& key, size_t group_size) :
+	TripleDES::TripleDES(const std::string& key) :
 		EncryptBase(key),
 		m_program("des.cl"),
 		m_enc_id(m_program.MakeFunction("triplecrypt")),
-		m_dec_id(m_program.MakeFunction("triplecrypt")),
-		m_group_size(group_size)
+		m_dec_id(m_program.MakeFunction("triplecrypt"))
 	{
-		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
-		{
-			throw Exception{};
-		}
-
 		if (key.size() != k_min_key_size)
 		{
 			throw Exception{};
@@ -235,8 +229,8 @@ namespace opencl::des
 
 	std::string TripleDES::GetName() const
 	{
-		char buffer[48];
-		sprintf_s(buffer, "Triple DES OpenCL %zi per group", m_group_size);
+		char buffer[32];
+		sprintf_s(buffer, "Triple DES OpenCL");
 		return buffer;
 	}
 

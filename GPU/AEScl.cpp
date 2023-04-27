@@ -77,18 +77,12 @@ namespace opencl::aes
 		}
 	}
 
-	AES::AES(const std::string& key, size_t group_size) :
+	AES::AES(const std::string& key) :
 		EncryptBase(key),
 		m_program("aes.cl"),
 		m_enc_id(m_program.MakeFunction("EncryptBlockCTR")),
-		m_dec_id(m_program.MakeFunction("DecryptBlockCTR")),
-		m_group_size(group_size)
+		m_dec_id(m_program.MakeFunction("DecryptBlockCTR"))
 	{
-		if (group_size == 0 || group_size > (SIZE_MAX / k_block_size))
-		{
-			throw Exception{};
-		}
-
 		unsigned char subkeys[240];
 
 		switch (key.size())
@@ -135,8 +129,8 @@ namespace opencl::aes
 
 	std::string AES::GetName() const
 	{
-		char buffer[32];
-		sprintf_s(buffer, "AES OpenCL %zi per group", m_group_size);
+		char buffer[16];
+		sprintf_s(buffer, "AES OpenCL");
 		return buffer;
 	}
 
