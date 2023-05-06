@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-set (Test_source "CPU.cpp")
+set (Test_source "CPU.cpp" "ErrorTest.cpp" "TimeTest.cpp")
 
 find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
