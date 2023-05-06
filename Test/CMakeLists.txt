@@ -5,6 +5,9 @@ cmake_minimum_required (VERSION 3.8)
 
 set (Test_source "CPU.cpp")
 
+find_package(PythonLibs REQUIRED)
+include_directories(${PYTHON_INCLUDE_DIRS})
+
 # Add source to this project's executable.
 add_executable(Test ${Test_source})
 
@@ -14,4 +17,4 @@ set_target_properties(Test PROPERTIES
     FOLDER "Project"
 )
 
-target_link_libraries(Test CPU GPU gtest mbedcrypto opencl)
+target_link_libraries(Test CPU GPU gtest mbedcrypto opencl ${PYTHON_LIBRARIES})

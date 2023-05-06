@@ -67,13 +67,13 @@ void TestCryptGroupsThreads()
 
 	// Test thread_count
 	{
-		EXPECT_NO_THROW(T(key, 1, 0), typename T::Exception);
+		EXPECT_NO_THROW(T(key, 1, 0));
 
 		EXPECT_NO_THROW(T(key, 1, 1));
 
 		EXPECT_NO_THROW(T(key, 1, 17));
 
-		EXPECT_NO_THROW(T(key, 1, SIZE_MAX), typename T::Exception);
+		EXPECT_NO_THROW(T(key, 1, SIZE_MAX));
 	}
 
 	TestCryptGroups<T>();

@@ -18,7 +18,7 @@ inline double TimeFunc(size_t num, const F& function, Args&... args)
 	auto t2 = std::chrono::steady_clock::now();
 
 	auto time_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
-	auto time_sec = time_nano.count() / 1000000000.0;
+	double time_sec = time_nano.count() / 1000000000.0;
 
 	return time_sec;
 }

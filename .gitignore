@@ -367,3 +367,11 @@ FodyWeavers.xsd
 CMakeFiles/
 
 CMakeCache.txt
+
+cmake_install.cmake
+
+*.png
+
+*.vcxproj
+*.vcxproj.filters
+*.sln

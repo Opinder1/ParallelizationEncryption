@@ -48,33 +48,32 @@ void RunAllTests()
 
 struct DataSizeSpeedsTest : TimeTest
 {
-	DataSizeSpeedsTest(size_t repeats, size_t iterations, bool make_log_graph) :
-		m_repeats(repeats),
+	DataSizeSpeedsTest(size_t iterations, bool make_log_graph) :
 		m_iterations(iterations),
 		m_make_log_graph(make_log_graph)
 	{}
 
-	void ApplyAlgorithm(const EncryptBase& algorithm, std::string& x, std::string& y) override
+	void ApplyAlgorithm(const EncryptBase& algorithm, std::vector<double>& x, std::vector<double>& y) override
 	{
 		for (size_t i = 0; i < m_iterations; i++)
 		{
-			size_t data_size = 16 * (1 << i);
+			size_t data_size = 16 * size_t(pow(i, 1.8) + 1);
 
 			const std::string in(data_size, 'A');
 			std::string out;
 
-			// Initial run to warm up GPU if being used
-			TimeEncrypt(1, algorithm, in, out);
-
-			double t = TimeEncrypt(m_repeats, algorithm, in, out) / float(m_repeats);
+			double t = 1000.0f;
+			
+			for (size_t i = 0; i < 5; i++)
+			{
+				t = fmin(t, TimeEncrypt(1, algorithm, in, out));
+			}
 
 			printf("%zi ", i);
 
-			x.append(std::to_string(data_size));
-			x.append(",");
+			x.push_back(double(data_size));
 
-			y.append(std::to_string(t));
-			y.append(",");
+			y.push_back(t);
 		}
 		printf("\n");
 	}
@@ -88,36 +87,35 @@ struct DataSizeSpeedsTest : TimeTest
 	virtual bool ShouldMakeXLog() override { return false; }
 
 	size_t m_iterations;
-	size_t m_repeats;
 	bool m_make_log_graph;
 };
 
 struct BytesPerSecondTest : TimeTest
 {
-	BytesPerSecondTest(size_t repeats) :
-		m_repeats(repeats)
+	BytesPerSecondTest()
 	{}
 
-	void ApplyAlgorithm(const EncryptBase& algorithm, std::string& x, std::string& y)
+	void ApplyAlgorithm(const EncryptBase& algorithm, std::vector<double>& x, std::vector<double>& y)
 	{
-		for (size_t i = 0; i < 24; i++)
+		for (size_t i = 0; i < 100; i++)
 		{
-			size_t data_size = 16 * (1 << i);
+			size_t data_size = 16 * size_t(pow(i, 1.8) + 1);
 
 			const std::string in(data_size, 'A');
 			std::string out;
 
-			TimeEncrypt(1, algorithm, in, out);
-
-			double t = TimeEncrypt(m_repeats, algorithm, in, out) / float(m_repeats);
+			double t = 1000.0f;
+			
+			for (size_t i = 0; i < 5; i++)
+			{
+				t = fmin(t, TimeEncrypt(1, algorithm, in, out));
+			}
 
 			printf("%zi ", data_size);
 
-			x.append(std::to_string(data_size));
-			x.append(",");
+			x.push_back(double(data_size));
 
-			y.append(std::to_string(data_size / t));
-			y.append(",");
+			y.push_back(double(data_size / t));
 		}
 		printf("\n");
 	}
@@ -129,8 +127,6 @@ struct BytesPerSecondTest : TimeTest
 	virtual bool ShouldMakeLogGraph() override { return false; }
 
 	virtual bool ShouldMakeXLog() override { return true; }
-
-	size_t m_repeats;
 };
 
 void RunAllAnalysis()
@@ -150,16 +146,16 @@ void RunAllAnalysis()
 		opencl::aes::AES aes4(aeskey);
 
 		// Tests comparing different versions of Triple DES and AES
-		TimeAndGraph("TDES", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(10, 20, true));
+		TimeAndGraph("TDES", "Time to encrypt different amounts of data\\n with different parallelized versions of triple DES", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(300, true));
 
-		TimeAndGraph("AES", { &aes1, &aes2, &aes3, &aes4 }, DataSizeSpeedsTest(10, 20, true));
+		TimeAndGraph("AES", "Time to encrypt different amounts of data\\n with different parallelized versions of AES", { &aes1, &aes2, &aes3, &aes4 }, DataSizeSpeedsTest(300, true));
 
-		TimeAndGraph("TDES and AES", { &des3, &des4, &aes3, &aes4 }, DataSizeSpeedsTest(20, 20, true));
+		TimeAndGraph("TDES_vs_AES", "Comparing the time to encrypt different\\n amounts of data with GPU versions of triple DES and AES", { &des3, &des4, &aes3, &aes4 }, DataSizeSpeedsTest(300, true));
 
 		// Testing the bytes per second of the GPU versions. This shows to what extent the Memory transfer is a bottleneck
-		TimeAndGraph("TDES bytes per second", { &des3, &des4 }, BytesPerSecondTest(10));
+		TimeAndGraph("TDES_BytesPerSecond", "The amount of bytes per second being\\n encrypted with different sizes of data for triple DES", { &des3, &des4 }, BytesPerSecondTest());
 
-		TimeAndGraph("AES bytes per second", { &aes3, &aes4 }, BytesPerSecondTest(10));
+		TimeAndGraph("AES_BytesPerSecond", "The amount of bytes per second being\\n encrypted with different sizes of data for AES", { &aes3, &aes4 }, BytesPerSecondTest());
 	}
 
 	// Testing encrypting blocks in groups
@@ -169,7 +165,7 @@ void RunAllAnalysis()
 		des::v3::TripleDESParallel des3(deskey, 16);
 		des::v3::TripleDESParallel des4(deskey, 64);
 
-		TimeAndGraph("TDES CPU group size", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(10, 18, false));
+		TimeAndGraph("TDES_GroupSize", "Encrypting data blocks in different\\n sized groups for triple DES", {&des1, &des2, &des3, &des4}, DataSizeSpeedsTest(300, false));
 	}
 
 	{
@@ -178,7 +174,7 @@ void RunAllAnalysis()
 		aes::v3::AESParallel aes3(aeskey, 16);
 		aes::v3::AESParallel aes4(aeskey, 64);
 
-		TimeAndGraph("AES CPU group size", { &aes1, &aes2, &aes3, &aes4 }, DataSizeSpeedsTest(10, 18, false));
+		TimeAndGraph("AES_GroupSize", "Encrypting data blocks in different\\n sized groups for AES", {&aes1, &aes2, &aes3, &aes4}, DataSizeSpeedsTest(300, false));
 	}
 
 	// Testing encrypting with different CPU thread counts.
@@ -188,7 +184,7 @@ void RunAllAnalysis()
 		des::v3::TripleDESParallel des3(deskey, 1, 6);
 		des::v3::TripleDESParallel des4(deskey, 1, 12);
 
-		TimeAndGraph("TDES CPU thread count", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(10, 16, false));
+		TimeAndGraph("TDES_ThreadCount", "Encrypting data with different numbers\\n of CPU cores for triple DES", { &des1, &des2, &des3, &des4 }, DataSizeSpeedsTest(300, false));
 	}
 
 	{
@@ -197,7 +193,7 @@ void RunAllAnalysis()
 		aes::v3::AESParallel aes3(aeskey, 1, 6);
 		aes::v3::AESParallel aes4(aeskey, 1, 12);
 
-		TimeAndGraph("AES CPU thread count", { &aes1, &aes2, &aes3, &aes4 }, DataSizeSpeedsTest(10, 16, false));
+		TimeAndGraph("AES_ThreadCount", "Encrypting data with different numbers\\n of CPU cores for AES", { &aes1, &aes2, &aes3, &aes4 }, DataSizeSpeedsTest(300, false));
 	}
 }
 

@@ -8,7 +8,7 @@
 
 struct TimeTest
 {
-	virtual void ApplyAlgorithm(const EncryptBase& algorithm, std::string& x, std::string& y) = 0;
+	virtual void ApplyAlgorithm(const EncryptBase& algorithm, std::vector<double>& x, std::vector<double>& y) = 0;
 
 	virtual const char* GetXAxisName() = 0;
 
@@ -21,4 +21,4 @@ struct TimeTest
 
 double TimeEncrypt(size_t num, const EncryptBase& alg, const std::string& in, std::string& out);
 
-void TimeAndGraph(const char* name, const std::vector<EncryptBase*> algorithms, TimeTest&& test);
+void TimeAndGraph(const char* file_name, const char* name, const std::vector<EncryptBase*> algorithms, TimeTest&& test);
