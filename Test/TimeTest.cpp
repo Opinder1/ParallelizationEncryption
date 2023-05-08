@@ -8,7 +8,6 @@
 void TimeEncryptImpl(const EncryptBase& alg, const std::string& in, std::string& out)
 {
 	out = alg.Encrypt(in);
-	out = alg.Decrypt(out);
 };
 
 double TimeEncrypt(size_t num, const EncryptBase& alg, const std::string& in, std::string& out)
@@ -57,7 +56,7 @@ void TimeAndGraph(const char* file_name, const char* name, const std::vector<Enc
 	}
 
 	command.append("pyplot.legend()\n");
-	command.append(Format("pyplot.title('%s')\n", name));
+	//command.append(Format("pyplot.title('%s')\n", name));
 
 	// Second command to generate graph without logs
 	std::string command2 = command;

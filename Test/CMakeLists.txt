@@ -1,9 +1,11 @@
 ﻿# CMakeList.txt : CMake project for CPUGCC, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.9)
 
 set (Test_source "CPU.cpp" "ErrorTest.cpp" "TimeTest.cpp")
+
+find_package(OpenMP)
 
 # Add source to this project's executable.
 add_executable(Test ${Test_source})

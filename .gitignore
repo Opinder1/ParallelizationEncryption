@@ -371,6 +371,7 @@ CMakeCache.txt
 cmake_install.cmake
 
 *.png
+*.py
 
 *.vcxproj
 *.vcxproj.filters

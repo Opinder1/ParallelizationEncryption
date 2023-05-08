@@ -1,26 +1,39 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <string_view>
 #include <bitset>
 #include <chrono>
+#include <algorithm>
 
 template<class F, class... Args>
 inline double TimeFunc(size_t num, const F& function, Args&... args)
 {
-	auto t1 = std::chrono::steady_clock::now();
+	// Error checking for number of iterations for median
+	if (num == 0) num = 1;
+	if (num > 16) num = 16;
+
+	std::array<double, 16> times = { 0 };
 
 	for (size_t i = 0; i < num; i++)
 	{
+		auto t1 = std::chrono::steady_clock::now();
+
 		function(args...);
+
+		auto t2 = std::chrono::steady_clock::now();
+
+		auto time_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
+		double time_sec = time_nano.count() / 1000000000.0;
+
+		times[i] = time_sec;
 	}
 
-	auto t2 = std::chrono::steady_clock::now();
-
-	auto time_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
-	double time_sec = time_nano.count() / 1000000000.0;
-
-	return time_sec;
+	// Sort for median using only the first num elements that were written to
+	std::sort(times.begin(), times.begin() + num);
+	
+	return times[num / 2];
 }
 
 inline char ToLower(char input)

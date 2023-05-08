@@ -62,12 +62,7 @@ struct DataSizeSpeedsTest : TimeTest
 			const std::string in(data_size, 'A');
 			std::string out;
 
-			double t = 1000.0f;
-			
-			for (size_t i = 0; i < 5; i++)
-			{
-				t = fmin(t, TimeEncrypt(1, algorithm, in, out));
-			}
+			double t = TimeEncrypt(9, algorithm, in, out);
 
 			printf("%zi ", i);
 
@@ -92,24 +87,20 @@ struct DataSizeSpeedsTest : TimeTest
 
 struct BytesPerSecondTest : TimeTest
 {
-	BytesPerSecondTest()
+	BytesPerSecondTest(size_t iterations) :
+		m_iterations(iterations)
 	{}
 
 	void ApplyAlgorithm(const EncryptBase& algorithm, std::vector<double>& x, std::vector<double>& y)
 	{
-		for (size_t i = 0; i < 100; i++)
+		for (size_t i = 0; i < m_iterations; i++)
 		{
 			size_t data_size = 16 * size_t(pow(i, 1.8) + 1);
 
 			const std::string in(data_size, 'A');
 			std::string out;
 
-			double t = 1000.0f;
-			
-			for (size_t i = 0; i < 5; i++)
-			{
-				t = fmin(t, TimeEncrypt(1, algorithm, in, out));
-			}
+			double t = TimeEncrypt(9, algorithm, in, out);
 
 			printf("%zi ", data_size);
 
@@ -127,6 +118,8 @@ struct BytesPerSecondTest : TimeTest
 	virtual bool ShouldMakeLogGraph() override { return false; }
 
 	virtual bool ShouldMakeXLog() override { return true; }
+
+	size_t m_iterations;
 };
 
 void RunAllAnalysis()
@@ -153,26 +146,26 @@ void RunAllAnalysis()
 		TimeAndGraph("TDES_vs_AES", "Comparing the time to encrypt different\\n amounts of data with GPU versions of triple DES and AES", { &des3, &des4, &aes3, &aes4 }, DataSizeSpeedsTest(300, true));
 
 		// Testing the bytes per second of the GPU versions. This shows to what extent the Memory transfer is a bottleneck
-		TimeAndGraph("TDES_BytesPerSecond", "The amount of bytes per second being\\n encrypted with different sizes of data for triple DES", { &des3, &des4 }, BytesPerSecondTest());
+		TimeAndGraph("TDES_BytesPerSecond", "The amount of bytes per second being\\n encrypted with different sizes of data for triple DES", { &des3, &des4 }, BytesPerSecondTest(300));
 
-		TimeAndGraph("AES_BytesPerSecond", "The amount of bytes per second being\\n encrypted with different sizes of data for AES", { &aes3, &aes4 }, BytesPerSecondTest());
+		TimeAndGraph("AES_BytesPerSecond", "The amount of bytes per second being\\n encrypted with different sizes of data for AES", { &aes3, &aes4 }, BytesPerSecondTest(300));
 	}
 
 	// Testing encrypting blocks in groups
 	{
-		des::v3::TripleDESParallel des1(deskey, 1);
-		des::v3::TripleDESParallel des2(deskey, 4);
-		des::v3::TripleDESParallel des3(deskey, 16);
-		des::v3::TripleDESParallel des4(deskey, 64);
+		des::v3::TripleDESParallel des1(deskey, 1, 12);
+		des::v3::TripleDESParallel des2(deskey, 4, 12);
+		des::v3::TripleDESParallel des3(deskey, 16, 12);
+		des::v3::TripleDESParallel des4(deskey, 64, 12);
 
 		TimeAndGraph("TDES_GroupSize", "Encrypting data blocks in different\\n sized groups for triple DES", {&des1, &des2, &des3, &des4}, DataSizeSpeedsTest(300, false));
 	}
 
 	{
-		aes::v3::AESParallel aes1(aeskey, 1);
-		aes::v3::AESParallel aes2(aeskey, 4);
-		aes::v3::AESParallel aes3(aeskey, 16);
-		aes::v3::AESParallel aes4(aeskey, 64);
+		aes::v3::AESParallel aes1(aeskey, 1, 12);
+		aes::v3::AESParallel aes2(aeskey, 4, 12);
+		aes::v3::AESParallel aes3(aeskey, 16, 12);
+		aes::v3::AESParallel aes4(aeskey, 64, 12);
 
 		TimeAndGraph("AES_GroupSize", "Encrypting data blocks in different\\n sized groups for AES", {&aes1, &aes2, &aes3, &aes4}, DataSizeSpeedsTest(300, false));
 	}

@@ -504,7 +504,7 @@ namespace cuda::des
 	std::string TripleDES::GetName() const
 	{
 		char buffer[16];
-		sprintf_s(buffer, "Triple DES CPU");
+		sprintf_s(buffer, "Triple DES CUDA");
 		return buffer;
 	}
 
