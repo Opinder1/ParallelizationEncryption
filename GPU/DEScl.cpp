@@ -159,8 +159,8 @@ namespace opencl::des
 	TripleDES::TripleDES(const std::string& key) :
 		EncryptBase(key),
 		m_program("des.cl"),
-		m_enc_id(m_program.MakeFunction("triplecrypt")),
-		m_dec_id(m_program.MakeFunction("triplecrypt"))
+		m_enc_id(m_program.MakeFunction("triplecrypt_ctr")),
+		m_dec_id(m_program.MakeFunction("triplecrypt_ctr"))
 	{
 		if (key.size() != k_min_key_size)
 		{
@@ -259,6 +259,6 @@ namespace opencl::des
 
 		unsigned int num = (unsigned int)input.size() / k_block_size;
 
-		m_program.RunFunction(m_dec_id, num);
+		m_program.RunFunction(m_enc_id, num);
 	}
 }

@@ -744,13 +744,14 @@ namespace des::v3
 
 	void TripleDES::EncryptInPlace(std::string& input) const
 	{
-		const unsigned char* subkeys[3] = {m_enc_subkeys[0], m_dec_subkeys[1], m_enc_subkeys[2]};
+		const unsigned char* subkeys[3] = { m_enc_subkeys[0], m_dec_subkeys[1], m_enc_subkeys[2] };
 		Crypt(subkeys, input);
 	}
 
 	void TripleDES::DecryptInPlace(std::string& input) const
 	{
-		const unsigned char* subkeys[3] = { m_dec_subkeys[0], m_enc_subkeys[1], m_dec_subkeys[2] };
+		//const unsigned char* subkeys[3] = { m_dec_subkeys[0], m_enc_subkeys[1], m_dec_subkeys[2] };
+		const unsigned char* subkeys[3] = { m_enc_subkeys[0], m_dec_subkeys[1], m_enc_subkeys[2] };
 		Crypt(subkeys, input);
 	}
 
@@ -803,7 +804,8 @@ namespace des::v3
 
 	void TripleDESParallel::DecryptInPlace(std::string& input) const
 	{
-		const unsigned char* subkeys[3] = { m_dec_subkeys[0], m_enc_subkeys[1], m_dec_subkeys[2] };
+		//const unsigned char* subkeys[3] = { m_dec_subkeys[0], m_enc_subkeys[1], m_dec_subkeys[2] };
+		const unsigned char* subkeys[3] = { m_enc_subkeys[0], m_dec_subkeys[1], m_enc_subkeys[2] };
 		Crypt(subkeys, input);
 	}
 

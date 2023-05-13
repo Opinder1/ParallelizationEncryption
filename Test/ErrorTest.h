@@ -28,8 +28,6 @@ void TestCrypt()
 	{
 		T algorithm(key);
 
-		printf("%s\n", algorithm.GetName().c_str());
-
 		std::string ciphertext = algorithm.Encrypt(input);
 		std::string plaintext = algorithm.Decrypt(ciphertext);
 
@@ -96,8 +94,6 @@ void TestVersions()
 
 	auto test = [&main, &main_enc, &main_dec, &input](const EncryptBase& alg)
 	{
-		printf("%s -> %s\n", main.GetName().c_str(), alg.GetName().c_str());
-
 		std::string other_enc = alg.Encrypt(input);
 
 		EXPECT_EQ(main_enc, other_enc);
