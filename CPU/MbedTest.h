@@ -10,6 +10,8 @@
 #include <string>
 #include <string>
 
+// Encryption wrapper classes over mbedtls that are used for testing speed against pre existing implementations of encryption functions
+
 namespace mbed
 {
 	class DES : public EncryptBase

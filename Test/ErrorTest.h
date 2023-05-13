@@ -26,16 +26,18 @@ void TestCrypt()
 	const std::string input(64, 'A');
 
 	{
-		T algorithmn(key);
+		T algorithm(key);
 
-		std::string ciphertext = algorithmn.Encrypt(input);
-		std::string plaintext = algorithmn.Decrypt(ciphertext);
+		printf("%s\n", algorithm.GetName().c_str());
+
+		std::string ciphertext = algorithm.Encrypt(input);
+		std::string plaintext = algorithm.Decrypt(ciphertext);
 
 		EXPECT_STREQ(input.c_str(), plaintext.c_str());
 
-		TestEncrypt(algorithmn, T::k_block_size);
+		TestEncrypt(algorithm, T::k_block_size);
 
-		TestDecrypt(algorithmn, T::k_block_size);
+		TestDecrypt(algorithm, T::k_block_size);
 	}
 
 	printf("%s passed\n", typeid(T).name());
@@ -92,8 +94,10 @@ void TestVersions()
 
 	std::string main_dec = main.Decrypt(main_enc);
 
-	auto test = [&main_enc, &main_dec, &input](const EncryptBase& alg)
+	auto test = [&main, &main_enc, &main_dec, &input](const EncryptBase& alg)
 	{
+		printf("%s -> %s\n", main.GetName().c_str(), alg.GetName().c_str());
+
 		std::string other_enc = alg.Encrypt(input);
 
 		EXPECT_EQ(main_enc, other_enc);

@@ -89,8 +89,8 @@ void TimeAndGraph(const char* file_name, const char* name, const std::vector<Enc
 	// Make a second graph with log axis
 	if (test.ShouldMakeLogGraph())
 	{
-		command.append(Format("pyplot.xlabel('%s (log)')\n", test.GetXAxisName()));
-		command.append(Format("pyplot.ylabel('%s (log)')\n", test.GetYAxisName()));
+		command2.append(Format("pyplot.xlabel('%s (log)')\n", test.GetXAxisName()));
+		command2.append(Format("pyplot.ylabel('%s (log)')\n", test.GetYAxisName()));
 
 		// Only apply log axis to one graph
 		command2.append("pyplot.xscale('log')\n");

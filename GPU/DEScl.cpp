@@ -255,7 +255,7 @@ namespace opencl::des
 			throw Exception{};
 		}
 
-		m_program.UpdateArg<ArrayIO>(m_dec_id, 1, [&](auto& arg) { arg.SetData(input.data(), input.size()); });
+		m_program.UpdateArg<ArrayIO>(m_enc_id, 1, [&](auto& arg) { arg.SetData(input.data(), input.size()); });
 
 		unsigned int num = (unsigned int)input.size() / k_block_size;
 

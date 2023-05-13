@@ -349,7 +349,7 @@ namespace cuda::des
 		}
 	}
 
-	__device__ void CryptBlock(const unsigned char* subkeys, unsigned char* block)
+	__device__ void CryptBlockECB(const unsigned char* subkeys, unsigned char* block)
 	{
 		unsigned char temp[8] = { 0 };
 
@@ -413,16 +413,34 @@ namespace cuda::des
 	{
 		block += (threadIdx.x * 8);
 
-		CryptBlock(subkeys + (96 * 0), block);
+		unsigned char index_block[8] = { 0 };
+
+		*(size_t*)&index_block = threadIdx.x;
+
+		CryptBlockECB(subkeys + (96 * 0), index_block);
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			block[i] = block[i] ^ index_block[i];
+		}
 	}
 
 	__global__ void TripleCryptBlocks(const unsigned char* subkeys, unsigned char* block)
 	{
 		block += (threadIdx.x * 8);
 
-		CryptBlock(subkeys + (96 * 0), block);
-		CryptBlock(subkeys + (96 * 1), block);
-		CryptBlock(subkeys + (96 * 2), block);
+		unsigned char index_block[8] = { 0 };
+
+		*(size_t*)&index_block = threadIdx.x;
+
+		CryptBlockECB(subkeys + (96 * 0), index_block);
+		CryptBlockECB(subkeys + (96 * 1), index_block);
+		CryptBlockECB(subkeys + (96 * 2), index_block);
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			block[i] = block[i] ^ index_block[i];
+		}
 	}
 
 	TripleDES::TripleDES(const std::string& key) :
@@ -567,7 +585,7 @@ namespace cuda::des
 		}
 
 		unsigned int num = (unsigned int)input.size() / k_block_size;
-		TripleCryptBlocks<<<1, num>>>(m_subkeys + (96 * 3), mem);
+		TripleCryptBlocks<<<1, num>>>(m_subkeys, mem);
 
 		if (cudaMemcpy(input.data(), mem, input.size(), cudaMemcpyDeviceToHost) != cudaSuccess)
 		{

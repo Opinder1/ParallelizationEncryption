@@ -464,7 +464,7 @@ namespace des::v3
 		}
 	}
 
-	void CryptBlock(const unsigned char* subkeys, unsigned char* block)
+	void CryptBlockECB(const unsigned char* subkeys, unsigned char* block)
 	{
 		unsigned char temp[8] = { 0 };
 
@@ -524,6 +524,36 @@ namespace des::v3
 		Permute(temp, block, final_perm_l.data(), final_perm_r.data(), 64);
 	}
 
+	void CryptBlockCTR(const unsigned char subkeys[96], size_t index, unsigned char* block)
+	{
+		unsigned char index_block[8] = { 0 };
+
+		*(size_t*)&index_block = index;
+
+		CryptBlockECB(subkeys, index_block);
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			block[i] = block[i] ^ index_block[i];
+		}
+	}
+
+	void TripleCryptBlockCTR(const unsigned char* subkeys[3], size_t index, unsigned char* block)
+	{
+		unsigned char index_block[8] = { 0 };
+
+		*(size_t*)&index_block = index;
+
+		CryptBlockECB(subkeys[0], index_block);
+		CryptBlockECB(subkeys[1], index_block);
+		CryptBlockECB(subkeys[2], index_block);
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			block[i] = block[i] ^ index_block[i];
+		}
+	}
+
 	DES::DES(const std::string& key) :
 		EncryptBase(key)
 	{
@@ -581,7 +611,7 @@ namespace des::v3
 
 	void DES::DecryptInPlace(std::string& input) const
 	{
-		Crypt(m_dec_subkeys, input);
+		Crypt(m_enc_subkeys, input);
 	}
 
 	void DES::Crypt(const unsigned char subkeys[96], std::string& input) const
@@ -593,7 +623,7 @@ namespace des::v3
 
 		for (size_t block = 0; block < input.size() / k_block_size; block++)
 		{
-			CryptBlock(subkeys, (unsigned char*)input.data() + (block * k_block_size));
+			CryptBlockCTR(subkeys, block, (unsigned char*)input.data() + (block * k_block_size));
 		}
 	}
 
@@ -632,7 +662,7 @@ namespace des::v3
 
 	void DESParallel::DecryptInPlace(std::string& input) const
 	{
-		Crypt(m_dec_subkeys, input);
+		Crypt(m_enc_subkeys, input);
 	}
 
 	void DESParallel::Crypt(const unsigned char subkeys[96], std::string& input) const
@@ -654,7 +684,7 @@ namespace des::v3
 
 			for (size_t block = group_start; block < group_end; block++)
 			{
-				CryptBlock(subkeys, (unsigned char*)input.data() + (block * k_block_size));
+				CryptBlockCTR(subkeys, block, (unsigned char*)input.data() + (block * k_block_size));
 			}
 		}
 	}
@@ -733,9 +763,7 @@ namespace des::v3
 
 		for (size_t block = 0; block < input.size() / k_block_size; block++)
 		{
-			CryptBlock(subkeys[0], (unsigned char*)input.data() + (block * k_block_size));
-			CryptBlock(subkeys[1], (unsigned char*)input.data() + (block * k_block_size));
-			CryptBlock(subkeys[2], (unsigned char*)input.data() + (block * k_block_size));
+			TripleCryptBlockCTR(subkeys, block, (unsigned char*)input.data() + (block * k_block_size));
 		}
 	}
 
@@ -798,9 +826,7 @@ namespace des::v3
 
 			for (size_t block = group_start; block < group_end; block++)
 			{
-				CryptBlock(subkeys[0], (unsigned char*)input.data() + (block * k_block_size));
-				CryptBlock(subkeys[1], (unsigned char*)input.data() + (block * k_block_size));
-				CryptBlock(subkeys[2], (unsigned char*)input.data() + (block * k_block_size));
+				TripleCryptBlockCTR(subkeys, block, (unsigned char*)input.data() + (block * k_block_size));
 			}
 		}
 	}
