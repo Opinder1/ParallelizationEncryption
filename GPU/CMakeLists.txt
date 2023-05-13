@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.9)
 
-set (GPU_source "AES.cu" "AEScl.cpp" "DES.cu" "DEScl.cpp" "OpenCL.cpp")
+set (GPU_source "AES.cu" "AEScl.cpp" "DES.cu" "DEScl.cpp" "OpenCL.cpp" "Dynamic.cpp")
 
 # Add source to this project's executable.
 add_library(GPU ${GPU_source})
