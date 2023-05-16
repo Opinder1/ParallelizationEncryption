@@ -1,8 +1,5 @@
 ﻿cmake_minimum_required (VERSION 3.9)
 
-# Set the python executable
-set(Python3_EXECUTABLE "C:/users/opind/AppData/Local/Python38/python.exe")
-
 # Enable project folders when generating visual studio solution
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
